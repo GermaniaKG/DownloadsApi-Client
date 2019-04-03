@@ -72,10 +72,13 @@ class DownloadsApiClient
 			throw new DownloadsApiClientUnexpectedValueException("Missing 'data' element in API response");
 		endif;
 
+		// "data" is quite common in JsomAPI responses.
+		// "attributes" is what we are interested here, the "type" and "id" stuff is not interesting
 		$downloads = $response_body_decoded['data'];
-		$this->logger->debug( sprintf("Calling '%s' yields '%s' results", $path, count($downloads)));
+		$downloads_attr_only = array_column($downloads, "attributes");
 
-		return new \ArrayIterator( $downloads );		
+		$this->logger->debug( sprintf("Calling '%s' yields '%s' results", $path, count($downloads_attr_only)));
+		return new \ArrayIterator( $downloads_attr_only );		
 	}
 
 
