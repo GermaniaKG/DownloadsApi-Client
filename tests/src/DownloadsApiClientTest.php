@@ -33,8 +33,9 @@ class DownloadsApiClientTest extends \PHPUnit\Framework\TestCase
 		$all = $sut->all([  "product" => "plissee" ]);
 		$this->assertInstanceOf( \Traversable::class, $all);
 
-		$all = $sut->latest([  "product" => "plissee" ]);
-		$this->assertInstanceOf( \Traversable::class, $all);
+		$latest = $sut->latest([  "product" => "plissee" ]);
+		$this->assertInstanceOf( \Traversable::class, $latest);
+
 
 	}
 
