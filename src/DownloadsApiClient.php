@@ -65,18 +65,39 @@ class DownloadsApiClient
 			return new \ArrayIterator( array() );	
 		}		
 
+
+		// ---------------------------------------------------
+		// Convert Response to array
+		// ---------------------------------------------------
+
 		$response_body = $response->getBody();
 		$response_body_decoded = json_decode($response_body, "associative");
+		if (is_null($response_body_decoded)):
+			throw new DownloadsApiClientUnexpectedValueException("API response was NULL or could not be decoded properly");
+		endif;
+
+
+		// ---------------------------------------------------
+		// "data" is quite common in JsonAPI responses, 
+		// however, we need it as array.
+		// ---------------------------------------------------
 
 		if (!isset( $response_body_decoded['data'] )):
 			throw new DownloadsApiClientUnexpectedValueException("Missing 'data' element in API response");
 		endif;
 
-		// "data" is quite common in JsomAPI responses.
-		// "attributes" is what we are interested here, the "type" and "id" stuff is not interesting
 		$downloads = $response_body_decoded['data'];
-		$downloads_attr_only = array_column($downloads, "attributes");
+	
+		if (!is_array( $downloads )):
+			throw new DownloadsApiClientUnexpectedValueException("API response's 'data' element is not array");
+		endif;
 
+
+		// ---------------------------------------------------
+		// "attributes" is what we are interested in here, 
+		// the "type" and "id" stuff being not interesting.
+		// ---------------------------------------------------
+		$downloads_attr_only = array_column($downloads, "attributes");
 		$this->logger->debug( sprintf("Calling '%s' yields '%s' results", $path, count($downloads_attr_only)));
 		return new \ArrayIterator( $downloads_attr_only );		
 	}
