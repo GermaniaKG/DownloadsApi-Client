@@ -78,10 +78,16 @@ $downloads = $downloads_client->all($filters);
 
 ## Errors and Exceptions
 
+### Guzzle Exceptions
+
 Just in case the *DownloadsApiClient* (to be exact: the Guzze client) receives a *Guzzle* *[**RequestException**](http://docs.guzzlephp.org/en/stable/quickstart.html#exceptions)*, i.e. something wrong with the request or on the server, both the *all* and *latest* methods will return an **empty ArrayIterator**.  The error will be logged to the *PSR-3 Logger* passed to the constructor.
 
 **Please note:**
 *Guzzle* [**TransferExceptions**](http://docs.guzzlephp.org/en/stable/quickstart.html#exceptions) – thrown while transferring requests – will not be caught internally and instead will bubble up.
+
+### Unexpected values in response
+
+Whenever the response can't be decoded to a useful array, a  **DownloadsApiClientUnexpectedValueException** will be thrown. This class implements `DownloadsApiClientExceptionInterface` and extends `\UnexpectedValueException`. 
 
 
 
