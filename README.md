@@ -28,7 +28,7 @@ use GuzzleHttp\Client;
 // Setup a Guzzle Client that will ask Downloads API
 $guzzle = new Client( ... );
 
-// Have you Downloads API Access token at hand
+// Have your DownloadsAPI Access token at hand
 $token = "manymanyletters"; 
 
 // Setup the Downloads API client, 
