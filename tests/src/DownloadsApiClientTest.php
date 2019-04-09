@@ -10,24 +10,27 @@ class DownloadsApiClientTest extends \PHPUnit\Framework\TestCase
 	public $cachepool;
 	public $downloads_client;
 
+
 	public function setUp()
 	{
+		$token = $GLOBALS['AUTH_TOKEN'];
+		$auth_header = sprintf("Bearer %s", $token);
+
 		$this->downloads_client = new Client([
 		    // Base URI is used with relative requests
-		    'base_uri' => $GLOBALS['DOWNLOADS_API']
+		    'base_uri' => $GLOBALS['DOWNLOADS_API'],
+		    'headers'  => array('Authorization' => $auth_header)
 		]);
 
 		$this->cachepool = new \Stash\Pool( new \Stash\Driver\FileSystem([
 			'path' => dirname(dirname(__FILE__)) . "/cache/"
 		]));
-
 	}
+
 
 	public function testSimple()
 	{
-		$token = $GLOBALS['AUTH_TOKEN'];
-
-		$sut = new DownloadsApiClient( $token, $this->downloads_client );
+		$sut = new DownloadsApiClient( $this->downloads_client );
 		$this->assertTrue( is_callable( $sut ));
 
 		$all = $sut->all([  "product" => "plissee" ]);

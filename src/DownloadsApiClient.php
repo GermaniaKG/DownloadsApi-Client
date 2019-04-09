@@ -20,24 +20,19 @@ class DownloadsApiClient
 	/**
 	 * @var string
 	 */
-	protected $token;
-
-	/**
-	 * @var string
-	 */
 	protected $loglevel = "error";
 
 
 
 	/**
-	 * @param string               $token  Germania AuthApi Token
-	 * @param Client               $client Guzzle Client
-	 * @param LoggerInterface|null $logger 
+	 * @param Client               $client   Readily configured Guzzle Client
+	 * @param LoggerInterface|null $logger   Optional PSR-3 Logger.
+	 * @param string               $loglevel Optional PSR-3 Loglevel, defaults to `error `
 	 */
-	public function __construct( string $token, Client $client, LoggerInterface $logger = null )
+	public function __construct(Client $client, LoggerInterface $logger = null, string $loglevel = "error" )
 	{
-		$this->token = $token;
 		$this->client = $client;
+		$this->loglevel = $loglevel;
 		$this->setLogger( $logger ?: new NullLogger);
 	}
 
@@ -49,12 +44,9 @@ class DownloadsApiClient
 	 */
 	public function __invoke( string $path, array $filters = array() )
 	{
-		$auth_header = sprintf("Bearer %s", $this->token);
-
 		try {
 			$response = $this->client->get( $path, [
-				'query' => ['filter' => $filters],
-				'headers' => array('Authorization' => $auth_header)
+				'query' => ['filter' => $filters]
 			]);
 		}
 		catch (RequestException $e) {
