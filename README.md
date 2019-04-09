@@ -14,35 +14,45 @@ $ composer require germania-kg/downloadsapi-client
 
 ## Usage
 
-### Setup the client
+### The Guzzle Factory
 
-The **DownloadsApiClient** requires an *Access token* as well as a *Guzzle Client* which will perform the API requests. It optionally accepts a *PSR-3 Logger* instance which is highly recommended.
+The *DownloadsApiClient* requires a **Guzzle Client** which will perform the API requests. The Guzzle client can be obtained from **GuzzleFactory**, using the *DownloadsApi* *endpoint* and the *AuthApi Access token*.
 
-Germania's *DownloadsApi* will use the Access token to pre-filter the results according to the permissions related with this Access token.
+```php
+<?php
+use Germania\DownloadsApiClient\GuzzleFactory;
+
+// Have your DownloadsAPI endpoint and Access token at hand
+$api = "https://api.example.com/"
+$token = "manymanyletters"; 
+
+// Setup a Guzzle Client that will ask Downloads API
+$guzzle_factory = new GuzzleFactory;
+$guzzle = $guzzle_factory( $api, $token);
+```
+
+
+
+### The DownloadsApiClient
+
+The **DownloadsApiClient** requires the above *Guzzle Client,* and optionally accepts a *PSR-3 Logger* and/or a PSR-3 *Loglevel name*.
 
 ```php
 <?php
 use Germania\DownloadsApiClient\DownloadsApiClient;
-use GuzzleHttp\Client;
 
-// Setup a Guzzle Client that will ask Downloads API
-$guzzle = new Client( ... );
-
-// Have your DownloadsAPI Access token at hand
-$token = "manymanyletters"; 
-
-// Setup the Downloads API client, 
-// optionally with PSR-3 Logger (recommended))
-$downloads_client = new DownloadsApiClient($token, $guzzle );
-$downloads_client = new DownloadsApiClient($token, $guzzle, $logger );
-
+$downloads_client = new DownloadsApiClient($guzzle );
+$downloads_client = new DownloadsApiClient($guzzle, $logger );
+$downloads_client = new DownloadsApiClient($guzzle, $logger, "alert" );
 ```
 
 
 
 ### Retrieve documents
 
-The **DownloadsApiClient** provides two public methods, ***all*** and ***latest***, which return an *ArrayIterator* with the documents provided by  *Germania's DownloadsAPI*.
+The **DownloadsApiClient** provides two public methods, ***all*** and ***latest***, which return an *ArrayIterator* with the documents provided by  *Germania's DownloadsAPI*. 
+
+The resulting documents list will have been pre-filtered according to the permissions related with the Access token sent along with the Guzzle Client request.
 
 ```php
 $downloads = $downloads_client->latest();
