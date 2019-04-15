@@ -50,7 +50,7 @@ $downloads_client = new DownloadsApiClient($guzzle, $logger, "alert" );
 
 ### Retrieve documents
 
-The **DownloadsApiClient** provides two public methods, ***all*** and ***latest***, which return an *ArrayIterator* with the documents provided by  *Germania's DownloadsAPI*. 
+The **DownloadsApiClient** provides two public methods, ***all*** and ***latest***, which return an ***ArrayIterator*** with the documents provided by *Germania's DownloadsAPI*. 
 
 The resulting documents list will have been pre-filtered according to the permissions related with the Access token sent along with the Guzzle Client request.
 
@@ -61,6 +61,50 @@ $downloads = $downloads_client->all();
 foreach( $downloads as $document):
 	print_r( $document );
 endforeach;
+```
+
+#### Example record
+
+The `print_r( $document )` will reveal something like this:
+
+```text
+Array (
+    [company] =>
+    [brand] => luxaflex
+    [title] => Luxaflex<sup>®</sup> Dachfenster-Produkte
+    [subtitle] =>
+    [subtitle2] =>
+    [description] =>
+    [picture] => Array (
+        [src] =>
+        [fallback] =>
+    )
+
+    [language] => de
+    [download] => https://download.example.com/document.pdf
+    [categories] => Array(
+        [0] => montageanleitung
+    )
+
+    [keywords] => Array ()
+
+    [products] => Array (
+        [0] => dachflaechen
+        [1] => plissee
+        [2] => duette
+        [3] => jalousie
+        [4] => rollo
+    )
+
+    [fileSize] => 2298631
+    [lastModified] => Array  (
+        [date] => 2018-02-19 10:21:14.000000
+        [timezone_type] => 2
+        [timezone] => GMT
+    )
+
+    [daysAgo] => 420
+)
 ```
 
 
