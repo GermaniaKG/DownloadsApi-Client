@@ -33,7 +33,10 @@ class DownloadsApiClientTest extends \PHPUnit\Framework\TestCase
 		$sut = new DownloadsApiClient( $this->downloads_client );
 		$this->assertTrue( is_callable( $sut ));
 
-		$all = $sut->all([  "product" => "plissee" ]);
+		$all = $sut->all([ 
+			"product" => "plissee",
+			"category" => "montageanleitung" 
+		]);
 		$this->assertInstanceOf( \Traversable::class, $all);
 
 		$latest = $sut->latest([  "product" => "plissee" ]);
