@@ -63,10 +63,8 @@ class DownloadsApiClient
 		// Convert Response to array
 		// ---------------------------------------------------
 
-		$response_body = $response->getBody();
-
 		try {
-			$response_body_decoded = (new JsonDecoder)($response_body, "associative");
+			$response_body_decoded = (new JsonDecoder)($response, "associative");
 		}
 		catch (\JsonException $e) {
 			throw new DownloadsApiClientUnexpectedValueException("Problems with API response", 0, $e);
