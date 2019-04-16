@@ -143,6 +143,8 @@ $downloads = $downloads_client->all($filters);
 
 
 
+
+
 ## Errors and Exceptions
 
 ### Exceptions during request
@@ -158,11 +160,33 @@ Whenever the response can't be decoded to a useful array, a  **DownloadsApiClien
 
 
 
-## Testing
 
-Copy `phpunit.xml.dist` to `phpunit.xml` and adapt the **DOWNLOADS_API** and **AUTH_TOKEN** environment variables. Then run *Phpunit* like this:
+
+## Issues
+
+See [full issues list.][i0]
+
+[i0]: https://github.com/GermaniaKG/DownloadsApi-Client/issues
+
+
+
+## Development
 
 ```bash
-$ composer phpunit
+$ git clone https://github.com/GermaniaKG/DownloadsApi-Client.git
+$ cd DownloadsApi-Client
+$ composer install
+```
+
+
+
+## Unit tests
+
+Copy `phpunit.xml.dist` to `phpunit.xml` and adapt the **DOWNLOADS_API** and **AUTH_TOKEN** environment variables. Then run [PhpUnit](https://phpunit.de/) like this:
+
+```bash
+$ composer test
+# or
+$ vendor/bin/phpunit
 ```
 
