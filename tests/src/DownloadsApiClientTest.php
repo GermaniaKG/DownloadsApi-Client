@@ -3,6 +3,7 @@ namespace tests;
 
 use Germania\DownloadsApiClient\DownloadsApiClient;
 use Germania\DownloadsApiClient\DownloadsApiClientUnexpectedValueException;
+use Germania\DownloadsApiClient\DownloadsApiClientRuntimeException;
 use GuzzleHttp\Client;
 use Prophecy\Argument;
 use GuzzleHttp\Exception\ClientException;
@@ -50,11 +51,36 @@ class DownloadsApiClientTest extends \PHPUnit\Framework\TestCase
 	}
 
 
+	/**
+	 * @dataProvider provideMalformedClientHeaders
+	 */
+	public function testExceptionOnMissingAuthorizationHeader( $invalid_headers )
+	{
+		$client = $this->prophesize( Client::class );
+		$client->getConfig( Argument::type("string"))->willReturn( $invalid_headers );
+		$client_stub = $client->reveal();
+
+		$this->expectException( \RuntimeException::class );
+		$this->expectException( DownloadsApiClientRuntimeException::class );
+		new DownloadsApiClient( $client_stub );
+	}
+
+	public function provideMalformedClientHeaders()
+	{
+		return array(
+			[ array("foo" => "bar") ],
+			[ false ],
+			[ null ]
+		);
+	}
+
+
 	public function testEmptyIteratorResultOnRequestException()
 	{
 		$exception = $this->prophesize( ClientException::class );
 
 		$client = $this->prophesize( Client::class );
+		$client->getConfig( Argument::type("string"))->willReturn( array("Authorization" => "foobar") );
 		$client->get( Argument::type("string"), Argument::type("array"))->willThrow( $exception->reveal() );
 		$client_stub = $client->reveal();
 
@@ -81,6 +107,7 @@ class DownloadsApiClientTest extends \PHPUnit\Framework\TestCase
 		$response = new Response( 200, array(), $body );
 
 		$client = $this->prophesize( Client::class );
+		$client->getConfig( Argument::type("string"))->willReturn( array("Authorization" => "foobar") );		
 		$client->get( Argument::type("string"), Argument::type("array"))->willReturn( $response );
 		$client_stub = $client->reveal();
 

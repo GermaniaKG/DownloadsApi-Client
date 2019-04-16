@@ -32,10 +32,21 @@ class DownloadsApiClient
 	 */
 	public function __construct(Client $client, LoggerInterface $logger = null, string $loglevel = "error" )
 	{
-		$this->client = $client;
+		$this->setClient( $client );
 		$this->loglevel = $loglevel;
 		$this->setLogger( $logger ?: new NullLogger);
 	}
+
+
+	protected function setClient( Client $client )
+	{
+		$headers = $client->getConfig('headers') ?? array();
+		if (!$auth = $headers['Authorization'] ?? false):
+			throw new DownloadsApiClientRuntimeException("Client lacks Authorization header.");
+		endif;
+		$this->client = $client;
+	}
+
 
 
 	/**
