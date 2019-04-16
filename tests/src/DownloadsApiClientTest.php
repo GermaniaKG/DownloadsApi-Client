@@ -3,6 +3,7 @@ namespace tests;
 
 use Germania\DownloadsApiClient\DownloadsApiClient;
 use Germania\DownloadsApiClient\DownloadsApiClientUnexpectedValueException;
+use Germania\DownloadsApiClient\DownloadsApiClientRuntimeException;
 use GuzzleHttp\Client;
 use Prophecy\Argument;
 use GuzzleHttp\Exception\ClientException;
@@ -60,6 +61,7 @@ class DownloadsApiClientTest extends \PHPUnit\Framework\TestCase
 		$client_stub = $client->reveal();
 
 		$this->expectException( \RuntimeException::class );
+		$this->expectException( DownloadsApiClientRuntimeException::class );
 		new DownloadsApiClient( $client_stub );
 	}
 
