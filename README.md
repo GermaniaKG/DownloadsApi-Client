@@ -1,4 +1,6 @@
-# Germania KG · DownloadsApi Client
+<img src="https://static.germania-kg.com/logos/ga-logo-2016-web.svgz" width="250px">
+
+# DownloadsApi Client
 
 **Server-side PHP client for retrieving a list of available downloads from Germania's DownloadsApi.**
 
