@@ -1,5 +1,9 @@
 <img src="https://static.germania-kg.com/logos/ga-logo-2016-web.svgz" width="250px">
 
+------
+
+
+
 # DownloadsApi Client
 
 **Server-side PHP client for retrieving a list of available downloads from Germania's DownloadsApi.**
@@ -120,6 +124,7 @@ Think of the filter array items as `WHERE … AND…` clauses, and comma-separat
 ```php
 $filters = array(
   'company' => "ACME",
+  'brand'   => "luxaflex",
   'category' => "brochure",
   'language' => "en",
   'keyword' => "customers,retailers",
