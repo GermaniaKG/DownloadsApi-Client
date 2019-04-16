@@ -1,6 +1,7 @@
 <?php
 namespace Germania\DownloadsApiClient;
 
+use Germania\JsonDecoder\JsonDecoder;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Psr\Log\LoggerInterface;
@@ -63,11 +64,13 @@ class DownloadsApiClient
 		// ---------------------------------------------------
 
 		$response_body = $response->getBody();
-		$response_body_decoded = json_decode($response_body, "associative");
-		if (is_null($response_body_decoded)):
-			throw new DownloadsApiClientUnexpectedValueException("API response was NULL or could not be decoded properly");
-		endif;
 
+		try {
+			$response_body_decoded = (new JsonDecoder)($response_body, "associative");
+		}
+		catch (\JsonException $e) {
+			throw new DownloadsApiClientUnexpectedValueException("Problems with API response", 0, $e);
+		}
 
 		// ---------------------------------------------------
 		// "data" is quite common in JsonAPI responses, 

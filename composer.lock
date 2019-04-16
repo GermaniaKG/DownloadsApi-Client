@@ -4,8 +4,49 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a58dd04c830bb2b6027d8909231897f9",
+    "content-hash": "e7f0cd9c8955378a765bcd627eded364",
     "packages": [
+        {
+            "name": "germania-kg/jsondecoder",
+            "version": "1.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/GermaniaKG/JsonDecoder.git",
+                "reference": "c043bca824ecac427ef42502db9200a67c08166e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/GermaniaKG/JsonDecoder/zipball/c043bca824ecac427ef42502db9200a67c08166e",
+                "reference": "c043bca824ecac427ef42502db9200a67c08166e",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.0",
+                "psr/http-message": "^1.0",
+                "symfony/polyfill-php73": "^1.11"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^2.12",
+                "php-coveralls/php-coveralls": "^2.0",
+                "phpunit/phpunit": "^5.7|^6.0|^7.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Germania\\JsonDecoder\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "authors": [
+                {
+                    "name": "Carsten Witt",
+                    "email": "carstenwitt@germania-kg.de",
+                    "role": "Developer"
+                }
+            ],
+            "description": " JSON decoding solution with JsonException support for older PHP versions",
+            "time": "2019-04-16T12:46:40+00:00"
+        },
         {
             "name": "guzzlehttp/guzzle",
             "version": "6.3.3",
@@ -325,6 +366,64 @@
             ],
             "description": "A polyfill for getallheaders.",
             "time": "2016-02-11T07:05:27+00:00"
+        },
+        {
+            "name": "symfony/polyfill-php73",
+            "version": "v1.11.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/polyfill-php73.git",
+                "reference": "d1fb4abcc0c47be136208ad9d68bf59f1ee17abd"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/polyfill-php73/zipball/d1fb4abcc0c47be136208ad9d68bf59f1ee17abd",
+                "reference": "d1fb4abcc0c47be136208ad9d68bf59f1ee17abd",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.3"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.11-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Symfony\\Polyfill\\Php73\\": ""
+                },
+                "files": [
+                    "bootstrap.php"
+                ],
+                "classmap": [
+                    "Resources/stubs"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Nicolas Grekas",
+                    "email": "p@tchwork.com"
+                },
+                {
+                    "name": "Symfony Community",
+                    "homepage": "https://symfony.com/contributors"
+                }
+            ],
+            "description": "Symfony polyfill backporting some PHP 7.3+ features to lower PHP versions",
+            "homepage": "https://symfony.com",
+            "keywords": [
+                "compatibility",
+                "polyfill",
+                "portable",
+                "shim"
+            ],
+            "time": "2019-02-06T07:57:58+00:00"
         }
     ],
     "packages-dev": [
