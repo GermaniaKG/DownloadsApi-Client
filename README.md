@@ -1,9 +1,19 @@
 <img src="https://static.germania-kg.com/logos/ga-logo-2016-web.svgz" width="250px">
 
+------
+
+
+
 # DownloadsApi Client
 
 **Server-side PHP client for retrieving a list of available downloads from Germania's DownloadsApi.**
 
+[![Packagist](https://img.shields.io/packagist/v/germania-kg/downloadsapi-client.svg?style=flat)](https://packagist.org/packages/germania-kg/downloadsapi-client)
+[![PHP version](https://img.shields.io/packagist/php-v/germania-kg/downloadsapi-client.svg)](https://packagist.org/packages/germania-kg/downloadsapi-client)
+[![Build Status](https://img.shields.io/travis/GermaniaKG/DownloadsApi-Client.svg?label=Travis%20CI)](https://travis-ci.org/GermaniaKG/DownloadsApi-Client)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/GermaniaKG/DownloadsApi-Client/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/GermaniaKG/DownloadsApi-Client/?branch=master)
+[![Code Coverage](https://scrutinizer-ci.com/g/GermaniaKG/DownloadsApi-Client/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/GermaniaKG/DownloadsApi-Client/?branch=master)
+[![Build Status](https://scrutinizer-ci.com/g/GermaniaKG/DownloadsApi-Client/badges/build.png?b=master)](https://scrutinizer-ci.com/g/GermaniaKG/DownloadsApi-Client/build-status/master)
 
 
 ## Installation
@@ -120,6 +130,7 @@ Think of the filter array items as `WHERE … AND…` clauses, and comma-separat
 ```php
 $filters = array(
   'company' => "ACME",
+  'brand'   => "luxaflex",
   'category' => "brochure",
   'language' => "en",
   'keyword' => "customers,retailers",
