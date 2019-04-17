@@ -82,7 +82,7 @@ class DownloadsApiClient
 
 
 		// ---------------------------------------------------
-		// Convert Response to array
+		// Build result
 		// ---------------------------------------------------
 
 		$downloads = array_column($response_body_decoded['data'], "attributes");
