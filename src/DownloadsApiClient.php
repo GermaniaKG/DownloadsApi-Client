@@ -7,6 +7,7 @@ use GuzzleHttp\Exception\RequestException;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Psr\Log\LoggerAwareTrait;
+use Psr\Cache\CacheItemPoolInterface;
 
 class DownloadsApiClient
 {
@@ -19,20 +20,33 @@ class DownloadsApiClient
 	protected $client;
 
 	/**
+	 * @var CacheItemPoolInterface
+	 */
+	protected $cache_itempool;
+
+	/**
 	 * @var string
 	 */
 	protected $loglevel = "error";
 
-	protected $default_cache_lifetime = 3600;
 
 	/**
-	 * @param Client               $client   Readily configured Guzzle Client
-	 * @param LoggerInterface|null $logger   Optional PSR-3 Logger.
-	 * @param string               $loglevel Optional PSR-3 Loglevel, defaults to `error `
+	 * @var integer
 	 */
-	public function __construct(Client $client, LoggerInterface $logger = null, string $loglevel = "error" )
+	protected $default_cache_lifetime = 3600;
+
+
+
+	/**
+	 * @param Client                 $client            Readily configured Guzzle Client
+	 * @param CacheItemPoolInterface $cache_itempool    PSR-6 Cache ItemPool
+	 * @param LoggerInterface|null   $logger            Optional PSR-3 Logger.
+	 * @param string                 $loglevel          Optional PSR-3 Loglevel, defaults to `error `
+	 */
+	public function __construct(Client $client, CacheItemPoolInterface $cache_itempool, LoggerInterface $logger = null, string $loglevel = "error" )
 	{
 		$this->setClient( $client );
+		$this->cache_itempool = $cache_itempool;
 		$this->loglevel = $loglevel;
 		$this->setLogger( $logger ?: new NullLogger);
 	}
@@ -44,10 +58,23 @@ class DownloadsApiClient
 	 * @param  string $path    Request URL path
 	 * @param  array  $filters Filters array
 	 * 
-	 * @return \ArrayIterator
+	 * @return array
 	 */
 	public function __invoke( string $path, array $filters = array() )
 	{
+		$cache_key  = $this->getCacheKey($path, $filters);
+		$cache_item = $this->cache_itempool->getItem( $cache_key );		
+
+		if ($cache_item->isHit()):
+			$downloads = $cache_item->get();
+
+			$msg = sprintf("Found '%s' results in cache for path '%s'", count($downloads), $path );
+			$this->logger->debug( $msg );
+
+			return new \ArrayIterator( $downloads );	
+		endif;
+
+
 		try {
 			$response = $this->client->get( $path, [
 				'query' => ['filter' => $filters]
@@ -58,6 +85,7 @@ class DownloadsApiClient
 			$this->logger->log( $this->loglevel, $msg, [
 				'exception' => get_class($e)
 			]);
+			// Shortcut: empty result
 			return new \ArrayIterator( array() );	
 		}		
 
@@ -65,10 +93,6 @@ class DownloadsApiClient
 		// ---------------------------------------------------
 		// Response validation
 		// ---------------------------------------------------
-
-		# Prepare for later
-		$cache_key = $this->getCacheKey($path, $filters);
-		$max_age = $this->getCacheLifetime($response);
 
 		try {
 			$response_body_decoded = (new JsonDecoder)($response, "associative");
@@ -83,12 +107,19 @@ class DownloadsApiClient
 
 
 		// ---------------------------------------------------
-		// Build result
+		// Build result and store in cache
 		// ---------------------------------------------------
 
 		$downloads = array_column($response_body_decoded['data'], "attributes");
 
-		$this->logger->debug( sprintf("Calling '%s' yields '%s' results", $path, count($downloads)));
+		$cache_item->set( $downloads );	
+		$lifetime = $this->getCacheLifetime( $response );
+    	$cache_item->expiresAfter( $lifetime );
+    	$this->cache_itempool->save($cache_item);
+
+		$msg = sprintf("Stored '%s' results in cache for path '%s'", $path, count($downloads) );
+		$this->logger->debug( $msg );
+
 		return new \ArrayIterator( $downloads );		
 	}
 
@@ -141,14 +172,14 @@ class DownloadsApiClient
 	 * @param  \Psr\Http\Message\ResponseInterface $response [description]
 	 * @return int
 	 */
-	protected function getCacheLifetime( $response )
+	protected function getCacheLifetime( $response ) : int
 	{
 		$cache_control = $response->getHeaderLine('Cache-Control');
 
 		preg_match("/(max\-age=(\d+))/i", $cache_control, $matches);
 
 		$max_age = $matches[2] ?? $this->default_cache_lifetime;
-		return $max_age;
+		return (int) $max_age;
 	}
 
 

@@ -23,14 +23,14 @@
     	"php": "^7.0",
         "guzzlehttp/guzzle": "^6.3",
 		"psr/log": "^1.1",
-		"germania-kg/jsondecoder": "^1.0"
+		"germania-kg/jsondecoder": "^1.0",
+		"psr/cache": "^1.0"
     },
 
 	"require-dev": {
 		"friendsofphp/php-cs-fixer": "^2.12",
 		"php-coveralls/php-coveralls": "^2.0",
-		"phpunit/phpunit": "^5.7|^6.0|^7.0",
-		"tedivm/stash": "^0.15"
+		"phpunit/phpunit": "^5.7|^6.0|^7.0"
 	},
 
   	"scripts": {

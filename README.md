@@ -47,15 +47,18 @@ $guzzle = $guzzle_factory( $api, $token);
 
 ### The DownloadsApiClient
 
-The **DownloadsApiClient** requires the above *Guzzle Client,* and optionally accepts a *PSR-3 Logger* and/or a PSR-3 *Loglevel name*.
+The **DownloadsApiClient** requires the above *Guzzle Client* as well as a *PSR-6 Cache ItemPool.* It optionally accepts a *PSR-3 Logger* and/or a PSR-3 *Loglevel name*.
 
 ```php
 <?php
 use Germania\DownloadsApiClient\DownloadsApiClient;
 
-$downloads_client = new DownloadsApiClient($guzzle );
-$downloads_client = new DownloadsApiClient($guzzle, $logger );
-$downloads_client = new DownloadsApiClient($guzzle, $logger, "alert" );
+$guzzle = $guzzle_factory( $api, $token);
+$cache = new \Stash\Pool( ... );
+
+$downloads_client = new DownloadsApiClient($guzzle, $cache );
+$downloads_client = new DownloadsApiClient($guzzle, $cache, $logger );
+$downloads_client = new DownloadsApiClient($guzzle, $cache, $logger, "alert" );
 ```
 
 
