@@ -62,6 +62,12 @@ class DownloadsApiClient
 	 */
 	public function __invoke( string $path, array $filters = array() )
 	{
+
+
+		// ---------------------------------------------------
+		// Ask Cache first
+		// ---------------------------------------------------
+
 		$cache_key  = $this->getCacheKey($path, $filters);
 		$cache_item = $this->cache_itempool->getItem( $cache_key );		
 
@@ -74,6 +80,10 @@ class DownloadsApiClient
 			return new \ArrayIterator( $downloads );	
 		endif;
 
+
+		// ---------------------------------------------------
+		// Ask remote API
+		// ---------------------------------------------------
 
 		try {
 			$response = $this->client->get( $path, [
@@ -117,7 +127,7 @@ class DownloadsApiClient
     	$cache_item->expiresAfter( $lifetime );
     	$this->cache_itempool->save($cache_item);
 
-		$msg = sprintf("Stored '%s' results in cache for path '%s'", $path, count($downloads) );
+		$msg = sprintf("Stored '%s' results in cache for path '%s'", count($downloads), $path );
 		$this->logger->debug( $msg );
 
 		return new \ArrayIterator( $downloads );		
@@ -203,7 +213,7 @@ class DownloadsApiClient
 
 
 	/**
-	 * Validates the decoded response.
+	 * Validates the decoded response, throwing things in error case.
 	 * 
 	 * @param  array  $response_body_decoded
 	 * @return void

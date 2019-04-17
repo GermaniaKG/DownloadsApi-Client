@@ -67,7 +67,9 @@ $downloads_client = new DownloadsApiClient($guzzle, $cache, $logger, "alert" );
 
 The **DownloadsApiClient** provides two public methods, ***all*** and ***latest***, which return an ***ArrayIterator*** with the documents provided by *Germania's DownloadsAPI*. 
 
-The resulting documents list will have been pre-filtered according to the permissions related with the Access token sent along with the Guzzle Client request.
+The resulting documents list will have been pre-filtered according to the permissions related with the Access token sent along with the *Guzzle Client* request.
+
+**Caching:** The results are cached in the given *PSR-6 Cache Item Pool*. The cache item TTL depends on the `Cache-Control: max-age=SECONDS` header that came along the response to the *Guzzle Client* request. The default TTL is 3600 seconds. 
 
 ```php
 $downloads = $downloads_client->latest();
