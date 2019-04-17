@@ -8,25 +8,14 @@ use GuzzleHttp\Client;
 use Prophecy\Argument;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Psr7\Response;
+use Psr\Cache\CacheItemPoolInterface;
+use Psr\Cache\CacheItemInterface;
 
 class DownloadsApiClientTest extends \PHPUnit\Framework\TestCase
 {
 
-	public $cachepool;
 
-
-	public function setUp()
-	{
-
-		$this->cachepool = new \Stash\Pool( new \Stash\Driver\FileSystem([
-			'path' => dirname(dirname(__FILE__)) . "/cache/"
-		]));
-
-		parent::setUp();
-	}
-
-
-	public function testSimple()
+	public function testSimpleWithNothingInCache()
 	{
 		$base_uri = $GLOBALS['DOWNLOADS_API'];
 		$token = $GLOBALS['AUTH_TOKEN'];
@@ -37,8 +26,53 @@ class DownloadsApiClientTest extends \PHPUnit\Framework\TestCase
 		    'headers'  => array('Authorization' => $auth_header)
 		]);
 
+		$cache_item = $this->prophesize(CacheItemInterface::class);
+		$cache_item->isHit()->willReturn( false );
+		$cache_item->set( Argument::type("array") )->shouldBeCalled();
+		$cache_item->expiresAfter( Argument::type("integer") )->shouldBeCalled();
+		$cache_item_stub = $cache_item->reveal();
 
-		$sut = new DownloadsApiClient( $client );
+		$cache = $this->prophesize( CacheItemPoolInterface::class );
+		$cache->getItem( Argument::type("string") )->willReturn( $cache_item_stub );
+		$cache->save( Argument::any() )->shouldBeCalled();
+		$cache_stub = $cache->reveal();
+
+		$sut = new DownloadsApiClient( $client, $cache_stub );
+		$this->assertTrue( is_callable( $sut ));
+
+		$all = $sut->all([ 
+			"product" => "plissee",
+			"category" => "montageanleitung" 
+		]);
+		$this->assertInstanceOf( \Traversable::class, $all);
+
+		$latest = $sut->latest([  "product" => "plissee" ]);
+		$this->assertInstanceOf( \Traversable::class, $latest);
+	}
+
+
+
+	public function testSimpleWithCacheHit()
+	{
+		$base_uri = $GLOBALS['DOWNLOADS_API'];
+		$token = $GLOBALS['AUTH_TOKEN'];
+		$auth_header = sprintf("Bearer %s", $token);
+
+		$client = new Client([
+		    'base_uri' => $base_uri,
+		    'headers'  => array('Authorization' => $auth_header)
+		]);
+
+		$cache_item = $this->prophesize(CacheItemInterface::class);
+		$cache_item->isHit()->willReturn( true );
+		$cache_item->get( )->willReturn( array("foo", "bar"));
+		$cache_item_stub = $cache_item->reveal();
+
+		$cache = $this->prophesize( CacheItemPoolInterface::class );
+		$cache->getItem( Argument::type("string") )->willReturn( $cache_item_stub );
+		$cache_stub = $cache->reveal();
+
+		$sut = new DownloadsApiClient( $client, $cache_stub );
 		$this->assertTrue( is_callable( $sut ));
 
 		$all = $sut->all([ 
@@ -63,7 +97,18 @@ class DownloadsApiClientTest extends \PHPUnit\Framework\TestCase
 
 		$this->expectException( \RuntimeException::class );
 		$this->expectException( DownloadsApiClientRuntimeException::class );
-		new DownloadsApiClient( $client_stub );
+
+
+		$cache_item = $this->prophesize(CacheItemInterface::class);
+		$cache_item->isHit()->willReturn( false );
+		$cache_item_stub = $cache_item->reveal();
+
+		$cache = $this->prophesize( CacheItemPoolInterface::class );
+		$cache->getItem( Argument::type("string") )->willReturn( $cache_item_stub );
+		$cache_stub = $cache->reveal();
+
+		new DownloadsApiClient( $client_stub, $cache_stub );
+
 	}
 
 	public function provideMalformedClientHeaders()
@@ -85,7 +130,15 @@ class DownloadsApiClientTest extends \PHPUnit\Framework\TestCase
 		$client->get( Argument::type("string"), Argument::type("array"))->willThrow( $exception->reveal() );
 		$client_stub = $client->reveal();
 
-		$sut = new DownloadsApiClient( $client_stub );
+		$cache_item = $this->prophesize(CacheItemInterface::class);
+		$cache_item->isHit()->willReturn( false );
+		$cache_item_stub = $cache_item->reveal();
+
+		$cache = $this->prophesize( CacheItemPoolInterface::class );
+		$cache->getItem( Argument::type("string") )->willReturn( $cache_item_stub );
+		$cache_stub = $cache->reveal();
+
+		$sut = new DownloadsApiClient( $client_stub, $cache_stub );
 
 		$all = $sut->all([ 
 			"product" => "plissee",
@@ -112,7 +165,15 @@ class DownloadsApiClientTest extends \PHPUnit\Framework\TestCase
 		$client->get( Argument::type("string"), Argument::type("array"))->willReturn( $response );
 		$client_stub = $client->reveal();
 
-		$sut = new DownloadsApiClient( $client_stub );
+		$cache_item = $this->prophesize(CacheItemInterface::class);
+		$cache_item->isHit()->willReturn( false );
+		$cache_item_stub = $cache_item->reveal();
+
+		$cache = $this->prophesize( CacheItemPoolInterface::class );
+		$cache->getItem( Argument::type("string") )->willReturn( $cache_item_stub );
+		$cache_stub = $cache->reveal();
+
+		$sut = new DownloadsApiClient( $client_stub, $cache_stub );
 
 		$this->expectException( DownloadsApiClientUnexpectedValueException::class );
 		$all = $sut->all();

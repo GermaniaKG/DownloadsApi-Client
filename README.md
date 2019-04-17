@@ -47,15 +47,18 @@ $guzzle = $guzzle_factory( $api, $token);
 
 ### The DownloadsApiClient
 
-The **DownloadsApiClient** requires the above *Guzzle Client,* and optionally accepts a *PSR-3 Logger* and/or a PSR-3 *Loglevel name*.
+The **DownloadsApiClient** requires the above *Guzzle Client* as well as a *PSR-6 Cache ItemPool.* It optionally accepts a *PSR-3 Logger* and/or a PSR-3 *Loglevel name*.
 
 ```php
 <?php
 use Germania\DownloadsApiClient\DownloadsApiClient;
 
-$downloads_client = new DownloadsApiClient($guzzle );
-$downloads_client = new DownloadsApiClient($guzzle, $logger );
-$downloads_client = new DownloadsApiClient($guzzle, $logger, "alert" );
+$guzzle = $guzzle_factory( $api, $token);
+$cache = new \Stash\Pool( ... );
+
+$downloads_client = new DownloadsApiClient($guzzle, $cache );
+$downloads_client = new DownloadsApiClient($guzzle, $cache, $logger );
+$downloads_client = new DownloadsApiClient($guzzle, $cache, $logger, "alert" );
 ```
 
 
@@ -64,7 +67,9 @@ $downloads_client = new DownloadsApiClient($guzzle, $logger, "alert" );
 
 The **DownloadsApiClient** provides two public methods, ***all*** and ***latest***, which return an ***ArrayIterator*** with the documents provided by *Germania's DownloadsAPI*. 
 
-The resulting documents list will have been pre-filtered according to the permissions related with the Access token sent along with the Guzzle Client request.
+The resulting documents list will have been pre-filtered according to the permissions related with the Access token sent along with the *Guzzle Client* request.
+
+**Caching:** The results are cached in the given *PSR-6 Cache Item Pool*. The cache item TTL depends on the `Cache-Control: max-age=SECONDS` header that came along the response to the *Guzzle Client* request. The default TTL is 3600 seconds. 
 
 ```php
 $downloads = $downloads_client->latest();
