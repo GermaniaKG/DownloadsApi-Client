@@ -85,11 +85,10 @@ class DownloadsApiClient
 		// Convert Response to array
 		// ---------------------------------------------------
 
-		$downloads = $response_body_decoded['data'];
-		$downloads_attr_only = array_column($downloads, "attributes");
+		$downloads = array_column($response_body_decoded['data'], "attributes");
 
-		$this->logger->debug( sprintf("Calling '%s' yields '%s' results", $path, count($downloads_attr_only)));
-		return new \ArrayIterator( $downloads_attr_only );		
+		$this->logger->debug( sprintf("Calling '%s' yields '%s' results", $path, count($downloads)));
+		return new \ArrayIterator( $downloads );		
 	}
 
 
