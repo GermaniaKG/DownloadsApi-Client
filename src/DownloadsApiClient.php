@@ -153,7 +153,7 @@ class DownloadsApiClient
 
 
 	/**
-	 * Validated the decoded response.
+	 * Validates the decoded response.
 	 * 
 	 * @param  array  $response_body_decoded
 	 * @return void
