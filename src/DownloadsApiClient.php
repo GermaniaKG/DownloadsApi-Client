@@ -23,7 +23,7 @@ class DownloadsApiClient
 	 */
 	protected $loglevel = "error";
 
-
+	protected $default_cache_lifetime = 3600;
 
 	/**
 	 * @param Client               $client   Readily configured Guzzle Client
@@ -63,35 +63,26 @@ class DownloadsApiClient
 
 
 		// ---------------------------------------------------
-		// Convert Response to array
+		// Response validation
 		// ---------------------------------------------------
+
+		# Prepare for later
+		$max_age = $this->getCacheLifetime($response);
 
 		try {
 			$response_body_decoded = (new JsonDecoder)($response, "associative");
+			$this->validateDecodedResponse( $response_body_decoded );	
 		}
 		catch (\JsonException $e) {
 			throw new DownloadsApiClientUnexpectedValueException("Problems with API response", 0, $e);
 		}
-
-		// ---------------------------------------------------
-		// "data" is quite common in JsonAPI responses, 
-		// however, we need it as array.
-		// ---------------------------------------------------
-
-		if (!isset( $response_body_decoded['data'] )):
-			throw new DownloadsApiClientUnexpectedValueException("Missing 'data' element in API response");
-		endif;
-
-
-		if (!is_array( $response_body_decoded['data'] )):
-			throw new DownloadsApiClientUnexpectedValueException("API response's 'data' element is not array");
-		endif;
+		catch (DownloadsApiClientExceptionInterface $e) {
+			throw $e;
+		}
 
 
 		// ---------------------------------------------------
-		// "attributes" is what we are interested in here,
-		// in JSON:API standard it carries the object data.
-		// The "type" and "id" stuff is not interesting here.
+		// Convert Response to array
 		// ---------------------------------------------------
 
 		$downloads = $response_body_decoded['data'];
@@ -142,5 +133,50 @@ class DownloadsApiClient
 		endif;
 		$this->client = $client;
 	}	
+
+
+	/**
+	 * Grabs the TTL from the "Cache-Control" header.
+	 * 
+	 * @param  \Psr\Http\Message\ResponseInterface $response [description]
+	 * @return int
+	 */
+	protected function getCacheLifetime( $response )
+	{
+		$cache_control = $response->getHeaderLine('Cache-Control');
+
+		preg_match("/(max\-age=(\d+))/i", $cache_control, $matches);
+
+		$max_age = $matches[2] ?? $this->default_cache_lifetime;
+		return $max_age;
+	}
+
+
+
+	/**
+	 * Validated the decoded response.
+	 * 
+	 * @param  array  $response_body_decoded
+	 * @return void
+	 *
+	 * @throws DownloadsApiClientUnexpectedValueException
+	 */
+	protected function validateDecodedResponse( array $response_body_decoded )
+	{
+		// ---------------------------------------------------
+		// "data" is quite common in JsonAPI responses, 
+		// however, we need it as array.
+		// ---------------------------------------------------
+
+		if (!isset( $response_body_decoded['data'] )):
+			throw new DownloadsApiClientUnexpectedValueException("Missing 'data' element in API response");
+		endif;
+
+
+		if (!is_array( $response_body_decoded['data'] )):
+			throw new DownloadsApiClientUnexpectedValueException("API response's 'data' element is not array");
+		endif;
+
+	}
 
 }
