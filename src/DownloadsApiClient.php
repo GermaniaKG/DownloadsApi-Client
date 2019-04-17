@@ -38,20 +38,12 @@ class DownloadsApiClient
 	}
 
 
-	protected function setClient( Client $client )
-	{
-		$headers = $client->getConfig('headers') ?? array();
-		if (!$auth = $headers['Authorization'] ?? false):
-			throw new DownloadsApiClientRuntimeException("Client lacks Authorization header.");
-		endif;
-		$this->client = $client;
-	}
-
 
 
 	/**
 	 * @param  string $path    Request URL path
 	 * @param  array  $filters Filters array
+	 * 
 	 * @return \ArrayIterator
 	 */
 	public function __invoke( string $path, array $filters = array() )
@@ -90,18 +82,21 @@ class DownloadsApiClient
 			throw new DownloadsApiClientUnexpectedValueException("Missing 'data' element in API response");
 		endif;
 
-		$downloads = $response_body_decoded['data'];
-	
-		if (!is_array( $downloads )):
+
+		if (!is_array( $response_body_decoded['data'] )):
 			throw new DownloadsApiClientUnexpectedValueException("API response's 'data' element is not array");
 		endif;
 
 
 		// ---------------------------------------------------
-		// "attributes" is what we are interested in here, 
-		// the "type" and "id" stuff being not interesting.
+		// "attributes" is what we are interested in here,
+		// in JSON:API standard it carries the object data.
+		// The "type" and "id" stuff is not interesting here.
 		// ---------------------------------------------------
+
+		$downloads = $response_body_decoded['data'];
 		$downloads_attr_only = array_column($downloads, "attributes");
+
 		$this->logger->debug( sprintf("Calling '%s' yields '%s' results", $path, count($downloads_attr_only)));
 		return new \ArrayIterator( $downloads_attr_only );		
 	}
@@ -125,5 +120,27 @@ class DownloadsApiClient
 	{
 		return $this->__invoke("latest", $filters );
 	}
+
+
+
+
+	/**
+	 * Sets the Guzzle client to use.
+	 *
+	 * The client is examined if it is configured to send an Authorization header;
+	 * if not, a DownloadsApiClientRuntimeException will be thrown.
+	 * 
+	 * @param Client $client [description]
+	 *
+	 * @throws DownloadsApiClientRuntimeException
+	 */
+	protected function setClient( Client $client )
+	{
+		$headers = $client->getConfig('headers') ?? array();
+		if (!$auth = $headers['Authorization'] ?? false):
+			throw new DownloadsApiClientRuntimeException("Client lacks Authorization header.");
+		endif;
+		$this->client = $client;
+	}	
 
 }
