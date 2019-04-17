@@ -67,6 +67,7 @@ class DownloadsApiClient
 		// ---------------------------------------------------
 
 		# Prepare for later
+		$cache_key = $this->getCacheKey($path, $filters);
 		$max_age = $this->getCacheLifetime($response);
 
 		try {
@@ -150,6 +151,24 @@ class DownloadsApiClient
 		return $max_age;
 	}
 
+
+	/**
+	 * Returns a cache key for the current call.
+	 * 
+	 * @param  string $path
+	 * @param  array $filters
+	 * @return string
+	 */
+	protected function getCacheKey(string $path, array $filters) : string
+	{
+		$client_headers = $this->client->getConfig('headers');
+
+		return implode("/", [
+			$client_headers['Authorization'],
+			$path,
+			sha1(serialize($filters))
+		]);
+	}
 
 
 	/**
