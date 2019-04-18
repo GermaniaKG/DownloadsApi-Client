@@ -207,7 +207,7 @@ class DownloadsApiClient
 		return implode("/", [
 			$client_headers['Authorization'],
 			$path,
-			sha1(serialize($filters))
+			md5(serialize($filters))
 		]);
 	}
 
