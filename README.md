@@ -39,8 +39,7 @@ $api = "https://api.example.com/"
 $token = "manymanyletters"; 
 
 // Setup a Guzzle Client that will ask Downloads API
-$guzzle_factory = new GuzzleFactory;
-$guzzle = $guzzle_factory( $api, $token);
+$guzzle = (new GuzzleFactory)( $api, $token);
 ```
 
 
@@ -52,9 +51,11 @@ The **DownloadsApiClient** requires the above *Guzzle Client* as well as a *PSR-
 ```php
 <?php
 use Germania\DownloadsApiClient\DownloadsApiClient;
+use Germania\DownloadsApiClient\GuzzleFactory;
 
-$guzzle = $guzzle_factory( $api, $token);
-$cache = new \Stash\Pool( ... );
+$guzzle = (new GuzzleFactory)( $api, $token);
+$cache  = new \Stash\Pool( ... );
+$logger = new \Monolog\Logger( ... );
 
 $downloads_client = new DownloadsApiClient($guzzle, $cache );
 $downloads_client = new DownloadsApiClient($guzzle, $cache, $logger );
