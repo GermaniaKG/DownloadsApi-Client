@@ -74,7 +74,7 @@ class DownloadsApiClient
 		if ($cache_item->isHit()):
 			$downloads = $cache_item->get();
 
-			$this->logger->debug( "Documents list found in cache", [
+			$this->logger->info( "Documents list found in cache", [
 				'path' => $path,
 				'count' => count($downloads),
 				'time' => ((microtime("float") - $start_time) * 1000) . "ms"
@@ -130,7 +130,7 @@ class DownloadsApiClient
     	$cache_item->expiresAfter( $lifetime );
     	$this->cache_itempool->save($cache_item);
 
-		$this->logger->debug( "Documents list stored in cache", [
+		$this->logger->notice( "Documents list stored in cache", [
 			'path' => $path,
 			'count' => count($downloads),
 			'time' => ((microtime("float") - $start_time) * 1000) . "ms"
