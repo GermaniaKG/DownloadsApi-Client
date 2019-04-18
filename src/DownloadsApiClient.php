@@ -74,7 +74,7 @@ class DownloadsApiClient
 		if ($cache_item->isHit()):
 			$downloads = $cache_item->get();
 
-			$this->logger->debug( "Found in cache", [
+			$this->logger->debug( "Documents list found in cache", [
 				'path' => $path,
 				'count' => count($downloads),
 				'time' => ((microtime("float") - $start_time) * 1000) . "ms"
@@ -94,7 +94,7 @@ class DownloadsApiClient
 			]);
 		}
 		catch (RequestException $e) {
-			$msg = $e->getMessage();
+			$msg = sprintf("DocumentsApi: %s", $e->getMessage());
 			$this->logger->log( $this->loglevel, $msg, [
 				'exception' => get_class($e)
 			]);
@@ -112,7 +112,7 @@ class DownloadsApiClient
 			$this->validateDecodedResponse( $response_body_decoded );	
 		}
 		catch (\JsonException $e) {
-			throw new DownloadsApiClientUnexpectedValueException("Problems with API response", 0, $e);
+			throw new DownloadsApiClientUnexpectedValueException("DocumentsApi: Problems with API response", 0, $e);
 		}
 		catch (DownloadsApiClientExceptionInterface $e) {
 			throw $e;
@@ -130,7 +130,7 @@ class DownloadsApiClient
     	$cache_item->expiresAfter( $lifetime );
     	$this->cache_itempool->save($cache_item);
 
-		$this->logger->debug( "Stored in cache", [
+		$this->logger->debug( "Documents list stored in cache", [
 			'path' => $path,
 			'count' => count($downloads),
 			'time' => ((microtime("float") - $start_time) * 1000) . "ms"
@@ -176,7 +176,7 @@ class DownloadsApiClient
 	{
 		$headers = $client->getConfig('headers') ?? array();
 		if (!$auth = $headers['Authorization'] ?? false):
-			throw new DownloadsApiClientRuntimeException("Client lacks Authorization header.");
+			throw new DownloadsApiClientRuntimeException("DocumentsApi: HTTP Client lacks Authorization header.");
 		endif;
 		$this->client = $client;
 	}	
@@ -233,12 +233,12 @@ class DownloadsApiClient
 		// however, we need it as array.
 
 		if (!isset( $response_body_decoded['data'] )):
-			throw new DownloadsApiClientUnexpectedValueException("Missing 'data' element in API response");
+			throw new DownloadsApiClientUnexpectedValueException("DocumentsApi response: Missing 'data' element");
 		endif;
 
 
 		if (!is_array( $response_body_decoded['data'] )):
-			throw new DownloadsApiClientUnexpectedValueException("API response's 'data' element is not array");
+			throw new DownloadsApiClientUnexpectedValueException("DocumentsApi response: Element 'data' is not array");
 		endif;
 
 	}
