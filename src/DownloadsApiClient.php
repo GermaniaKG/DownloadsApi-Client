@@ -62,7 +62,7 @@ class DownloadsApiClient
 	 */
 	public function __invoke( string $path, array $filters = array() )
 	{
-
+		$start_time = microtime("float");
 
 		// ---------------------------------------------------
 		// Ask Cache first
@@ -74,8 +74,11 @@ class DownloadsApiClient
 		if ($cache_item->isHit()):
 			$downloads = $cache_item->get();
 
-			$msg = sprintf("Found '%s' results in cache for path '%s'", count($downloads), $path );
-			$this->logger->debug( $msg );
+			$this->logger->debug( "Found in cache", [
+				'path' => $path,
+				'count' => count($downloads),
+				'time' => ((microtime("float") - $start_time) * 1000) . "ms"
+			]);
 
 			return new \ArrayIterator( $downloads );	
 		endif;
@@ -127,8 +130,11 @@ class DownloadsApiClient
     	$cache_item->expiresAfter( $lifetime );
     	$this->cache_itempool->save($cache_item);
 
-		$msg = sprintf("Stored '%s' results in cache for path '%s'", count($downloads), $path );
-		$this->logger->debug( $msg );
+		$this->logger->debug( "Stored in cache", [
+			'path' => $path,
+			'count' => count($downloads),
+			'time' => ((microtime("float") - $start_time) * 1000) . "ms"
+		]);
 
 		return new \ArrayIterator( $downloads );		
 	}
@@ -207,7 +213,7 @@ class DownloadsApiClient
 		return implode("/", [
 			$client_headers['Authorization'],
 			$path,
-			sha1(serialize($filters))
+			md5(serialize($filters))
 		]);
 	}
 
@@ -222,10 +228,8 @@ class DownloadsApiClient
 	 */
 	protected function validateDecodedResponse( array $response_body_decoded )
 	{
-		// ---------------------------------------------------
 		// "data" is quite common in JsonAPI responses, 
 		// however, we need it as array.
-		// ---------------------------------------------------
 
 		if (!isset( $response_body_decoded['data'] )):
 			throw new DownloadsApiClientUnexpectedValueException("Missing 'data' element in API response");
