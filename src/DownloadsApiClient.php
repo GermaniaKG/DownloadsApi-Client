@@ -210,8 +210,9 @@ class DownloadsApiClient
 	{
 		$client_headers = $this->client->getConfig('headers');
 
+		$hash = hash("sha256", $client_headers['Authorization'] );
 		return implode("/", [
-			$client_headers['Authorization'],
+			$hash,
 			$path,
 			md5(serialize($filters))
 		]);

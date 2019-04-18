@@ -63,6 +63,24 @@ $downloads_client = new DownloadsApiClient($guzzle, $cache, $logger, "alert" );
 
 
 
+### Security considerations: The caching engine
+
+The results are stored in the PSR-6 cache passed to the *DownloadsApiClient* constructor, using a *cache key* to look up the results next time. 
+
+This *cache key* contains a fast-to-compute **sha256 hash** of the authorization header. The downside is, your auth tokens are vulnerable to *hash collision* attacks, when two different string produce the same hash. 
+
+The auth token hopefully has a baked-in lifetime. Once this lifetime is reached, the auth token is worthless anyway. And, when an attacker has file access to your cache, he will have all results, regardless if he has your auth tokens or not. 
+
+**Security tips:**
+
+- Consider to pass an “Always-empty-cache” or one with very short lifetime, such as [Stash's Ephemeral](http://www.stashphp.com/Drivers.html#ephemeral) driver.
+- Store your cache securely. This is not responsibility of this library.
+- Clean your downloads cache often. This is not responsibility of this library.
+
+
+
+
+
 ### Retrieve documents
 
 The **DownloadsApiClient** provides two public methods, ***all*** and ***latest***, which return an ***ArrayIterator*** with the documents provided by *Germania's DownloadsAPI*. 
