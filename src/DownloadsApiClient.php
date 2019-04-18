@@ -222,10 +222,8 @@ class DownloadsApiClient
 	 */
 	protected function validateDecodedResponse( array $response_body_decoded )
 	{
-		// ---------------------------------------------------
 		// "data" is quite common in JsonAPI responses, 
 		// however, we need it as array.
-		// ---------------------------------------------------
 
 		if (!isset( $response_body_decoded['data'] )):
 			throw new DownloadsApiClientUnexpectedValueException("Missing 'data' element in API response");
