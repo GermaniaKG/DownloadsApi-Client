@@ -10,6 +10,7 @@ use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Psr7\Response;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Cache\CacheItemInterface;
+use Psr\Http\Message\ResponseInterface;
 
 class DownloadsApiClientTest extends \PHPUnit\Framework\TestCase
 {
@@ -21,10 +22,17 @@ class DownloadsApiClientTest extends \PHPUnit\Framework\TestCase
 		$token = $GLOBALS['AUTH_TOKEN'];
 		$auth_header = sprintf("Bearer %s", $token);
 
-		$client = new Client([
-		    'base_uri' => $base_uri,
-		    'headers'  => array('Authorization' => $auth_header)
-		]);
+
+		$response = new Response(200, array(), json_encode(array(
+			'data' => array()
+		)));
+
+
+		$client = $this->prophesize( Client::class );
+		$client->get( Argument::type("string"), Argument::type("array") )->willReturn( $response );
+		$client->getConfig( Argument::type("string") )->willReturn( array('Authorization' => "foo"));
+		$client_stub = $client->reveal();
+
 
 		$cache_item = $this->prophesize(CacheItemInterface::class);
 		$cache_item->isHit()->willReturn( false );
@@ -37,15 +45,15 @@ class DownloadsApiClientTest extends \PHPUnit\Framework\TestCase
 		$cache->save( Argument::any() )->shouldBeCalled();
 		$cache_stub = $cache->reveal();
 
-		$sut = new DownloadsApiClient( $client, $cache_stub );
+		$sut = new DownloadsApiClient( $client_stub, $cache_stub );
 		$this->assertTrue( is_callable( $sut ));
 
 		$all = $sut->all([ 
 			"product" => "plissee",
 			"category" => "montageanleitung" 
 		]);
-		$this->assertInstanceOf( \Traversable::class, $all);
 
+		$this->assertInstanceOf( \Traversable::class, $all);
 		$latest = $sut->latest([  "product" => "plissee" ]);
 		$this->assertInstanceOf( \Traversable::class, $latest);
 	}
