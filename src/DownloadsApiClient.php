@@ -89,6 +89,7 @@ class DownloadsApiClient
 		// ---------------------------------------------------
 
 		try {
+			// ResponseInterface!
 			$response = $this->client->get( $path, [
 				'query' => ['filter' => $filters]
 			]);
