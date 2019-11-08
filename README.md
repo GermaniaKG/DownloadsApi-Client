@@ -42,6 +42,22 @@ $token = "manymanyletters";
 $guzzle = (new GuzzleFactory)( $api, $token);
 ```
 
+### The HTTP Client Factory
+
+Creates a `Http\Adapter\Guzzle6\Client ` which implements `Psr\Http\Client\ClientInterface`. See more in PHP-HTTP's [Guzzle 6 Adapter](http://docs.php-http.org/en/latest/clients/guzzle6-adapter.html) documentation.
+
+```php
+<?php
+use Germania\DownloadsApiClient\HttpClientFactory;
+
+// Have your DownloadsAPI endpoint and Access token at hand
+$api = "https://api.example.com/"
+$token = "manymanyletters"; 
+
+// Create Guzzle Client that will ask Downloads API
+$http_client = (new HttpClientFactory)( $api, $token);
+```
+
 
 
 ### The DownloadsApiClient
