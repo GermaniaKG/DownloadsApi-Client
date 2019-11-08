@@ -6,7 +6,7 @@ use Http\Adapter\Guzzle6\Client as GuzzleAdapter;
 
 
 /**
- * This callable factory creates a Guzzle Client
+ * This callable factory creates a HTTP Client
  * for usage with Germania KG's Downloads API.
  */
 class HttpClientFactory
