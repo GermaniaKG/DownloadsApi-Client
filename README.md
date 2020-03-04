@@ -62,7 +62,7 @@ $http_client = (new HttpClientFactory)( $api, $token);
 
 ### The DownloadsApiClient
 
-The **DownloadsApiClient** requires the above *Guzzle Client* as well as a *PSR-6 Cache ItemPool.* It optionally accepts a *PSR-3 Logger* and/or a PSR-3 *Loglevel name*.
+The **DownloadsApiClient** requires the above *Guzzle Client* as well as a *PSR-6 Cache ItemPool.* It optionally accepts a *PSR-3 Logger* and/or a PSR-3 *Loglevel names* for both error and success cases.
 
 ```php
 <?php
@@ -73,9 +73,10 @@ $guzzle = (new GuzzleFactory)( $api, $token);
 $cache  = new \Stash\Pool( ... );
 $logger = new \Monolog\Logger( ... );
 
-$downloads_client = new DownloadsApiClient($guzzle, $cache );
-$downloads_client = new DownloadsApiClient($guzzle, $cache, $logger );
-$downloads_client = new DownloadsApiClient($guzzle, $cache, $logger, "alert" );
+$client = new DownloadsApiClient($guzzle, $cache );
+$client = new DownloadsApiClient($guzzle, $cache, $logger );
+$client = new DownloadsApiClient($guzzle, $cache, $logger, "alert" );
+$client = new DownloadsApiClient($guzzle, $cache, $logger, "error", "info" );
 ```
 
 

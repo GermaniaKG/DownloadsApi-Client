@@ -29,6 +29,11 @@ class DownloadsApiClient extends ApiClientAbstract
 	 */
 	protected $loglevel = "error";
 
+	/**
+	 * @var string
+	 */
+	protected $loglevel_success = "info";
+
 
 	/**
 	 * @param Client                 $client            Readily configured Guzzle Client
@@ -36,15 +41,14 @@ class DownloadsApiClient extends ApiClientAbstract
 	 * @param LoggerInterface|null   $logger            Optional PSR-3 Logger.
 	 * @param string                 $loglevel          Optional PSR-3 Loglevel, defaults to `error `
 	 */
-	public function __construct(Client $client, CacheItemPoolInterface $cache_itempool, LoggerInterface $logger = null, string $loglevel = "error" )
+	public function __construct(Client $client, CacheItemPoolInterface $cache_itempool, LoggerInterface $logger = null, string $loglevel = "error", string $loglevel_success = "info" )
 	{
 		$this->setClient( $client );
 		$this->cache_itempool = $cache_itempool;
 		$this->loglevel = $loglevel;
+		$this->loglevel_success = $loglevel_success;
 		$this->setLogger( $logger ?: new NullLogger);
 	}
-
-
 
 
 	/**
@@ -124,7 +128,7 @@ class DownloadsApiClient extends ApiClientAbstract
     	$cache_item->expiresAfter( $lifetime );
     	$this->cache_itempool->save($cache_item);
 
-		$this->logger->notice( "Documents list stored in cache", [
+		$this->logger->log($this->loglevel_success, "Documents list stored in cache", [
 			'path' => $path,
 			'count' => count($downloads),
 			'time' => ((microtime("float") - $start_time) * 1000) . "ms"
