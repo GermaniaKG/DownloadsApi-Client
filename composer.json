@@ -24,7 +24,8 @@
         "guzzlehttp/guzzle": "^6.3",
 		"psr/log": "^1.1",
 		"germania-kg/jsondecoder": "^1.0",
-		"psr/cache": "^1.0"
+		"psr/cache": "^1.0",
+		"php-http/guzzle6-adapter": "^2.0"
     },
 
 	"require-dev": {

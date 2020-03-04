@@ -2,20 +2,24 @@
 namespace Germania\DownloadsApiClient;
 
 use Germania\JsonDecoder\JsonDecoder;
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\RequestException;
+
+use Psr\Http\Client\ClientInterface;
+use Psr\Http\Client\ClientExceptionInterface;
+
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Cache\CacheItemPoolInterface;
+use GuzzleHttp\Psr7\Request;
 
-class DownloadsApiClient extends ApiClientAbstract
+class DownloadsApiHttpClient extends ApiClientAbstract
 {
+
 
 	use LoggerAwareTrait;
 
 	/**
-	 * @var \GuzzleHttp\Client
+	 * @var ClientInterface
 	 */
 	protected $client;
 
@@ -29,26 +33,35 @@ class DownloadsApiClient extends ApiClientAbstract
 	 */
 	protected $loglevel = "error";
 
+
 	/**
 	 * @var string
 	 */
-	protected $loglevel_success = "info";
+	protected $cache_user_id;
+
+
+
+
 
 
 	/**
-	 * @param Client                 $client            Readily configured Guzzle Client
+	 * @param ClientInterface        $client            HTTP Client
 	 * @param CacheItemPoolInterface $cache_itempool    PSR-6 Cache ItemPool
 	 * @param LoggerInterface|null   $logger            Optional PSR-3 Logger.
 	 * @param string                 $loglevel          Optional PSR-3 Loglevel, defaults to `error `
 	 */
-	public function __construct(Client $client, CacheItemPoolInterface $cache_itempool, LoggerInterface $logger = null, string $loglevel = "error", string $loglevel_success = "info" )
+	public function __construct(ClientInterface $client, CacheItemPoolInterface $cache_itempool, string $cache_user_id, LoggerInterface $logger = null, string $loglevel = "error" )
 	{
 		$this->setClient( $client );
 		$this->cache_itempool = $cache_itempool;
+		$this->cache_user_id = $cache_user_id;
 		$this->loglevel = $loglevel;
-		$this->loglevel_success = $loglevel_success;
 		$this->setLogger( $logger ?: new NullLogger);
 	}
+
+
+
+
 
 
 	/**
@@ -86,12 +99,20 @@ class DownloadsApiClient extends ApiClientAbstract
 		// ---------------------------------------------------
 
 		try {
+			
+
+			$request = new Request("GET", "");
+			$query = http_build_query(['filter' => $filters]);
+
+			$uri = $request->getUri()->withPath($path)->withQuery($query);
+
+			$request = $request->withUri( $uri );
+
 			// ResponseInterface!
-			$response = $this->client->get( $path, [
-				'query' => ['filter' => $filters]
-			]);
+			$response = $this->client->sendRequest( $request);
 		}
-		catch (RequestException $e) {
+
+		catch (ClientExceptionInterface $e) {
 			$msg = sprintf("DocumentsApi: %s", $e->getMessage());
 			$this->logger->log( $this->loglevel, $msg, [
 				'exception' => get_class($e)
@@ -128,7 +149,7 @@ class DownloadsApiClient extends ApiClientAbstract
     	$cache_item->expiresAfter( $lifetime );
     	$this->cache_itempool->save($cache_item);
 
-		$this->logger->log($this->loglevel_success, "Documents list stored in cache", [
+		$this->logger->notice( "Documents list stored in cache", [
 			'path' => $path,
 			'count' => count($downloads),
 			'time' => ((microtime("float") - $start_time) * 1000) . "ms"
@@ -138,27 +159,19 @@ class DownloadsApiClient extends ApiClientAbstract
 	}
 
 
-	/**
-	 * Sets the Guzzle client to use.
-	 *
-	 * The client is examined if it is configured to send an Authorization header;
-	 * if not, a DownloadsApiClientRuntimeException will be thrown.
-	 * 
-	 * @inhertDoc
-	 *
-	 * @throws DownloadsApiClientRuntimeException
-	 */
-	protected function setClient( Client $client )
-	{
-		$headers = $client->getConfig('headers') ?? array();
-		if (!$auth = $headers['Authorization'] ?? false):
-			throw new DownloadsApiClientRuntimeException("DocumentsApi: HTTP Client lacks Authorization header.");
-		endif;
 
+
+
+	/**
+	 * Sets the HTTP Client to use.
+	 *
+	 * @param ClientInterface $client
+	 */
+	protected function setClient( ClientInterface $client )
+	{
 		$this->client = $client;
 		return $this;
 	}	
-
 
 	/**
 	 * Returns a cache key for the current call.
@@ -169,9 +182,7 @@ class DownloadsApiClient extends ApiClientAbstract
 	 */
 	protected function getCacheKey(string $path, array $filters) : string
 	{
-		$client_headers = $this->client->getConfig('headers');
-
-		$hash = hash("sha256", $client_headers['Authorization'] );
+		$hash = hash("sha256", $this->cache_user_id );
 		return implode("/", [
 			$hash,
 			$path,
@@ -179,5 +190,5 @@ class DownloadsApiClient extends ApiClientAbstract
 		]);
 	}
 
-
 }
+
