@@ -9,6 +9,9 @@ use Psr\Log\NullLogger;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Cache\CacheItemPoolInterface;
 
+use Stash\Interfaces\ItemInterface as StashItemInterface;
+use Stash\Invalidation as StashInvalidation;
+
 class DownloadsApiClient extends ApiClientAbstract
 {
 
@@ -68,6 +71,11 @@ class DownloadsApiClient extends ApiClientAbstract
 		$cache_key  = $this->getCacheKey($path, $filters);
 		$cache_item = $this->cache_itempool->getItem( $cache_key );		
 
+		if ($cache_item instanceOf StashItemInterface):
+			$cache_item->setInvalidationMethod(StashInvalidation::PRECOMPUTE, $this->stash_precompute_time);
+		endif;
+
+
 		if ($cache_item->isHit()):
 			$downloads = $cache_item->get();
 
@@ -79,6 +87,21 @@ class DownloadsApiClient extends ApiClientAbstract
 
 			return new \ArrayIterator( $downloads );	
 		endif;
+
+
+		// 
+		// When reaching this point, the stored documents are stale.
+		// 
+
+
+		// From Stash Docs:
+	    // Mark this instance as the one regenerating the cache. Because our
+	    // protection method is Invalidation::OLD other Stash instances will
+	    // use the old value and count it as a hit.
+		if ($cache_item instanceOf StashItemInterface):
+			$cache_item->lock();
+		endif;
+
 
 
 		// ---------------------------------------------------
