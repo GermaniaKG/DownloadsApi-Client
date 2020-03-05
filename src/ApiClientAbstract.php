@@ -1,9 +1,13 @@
 <?php
 namespace Germania\DownloadsApiClient;
 
+use Psr\Log\LoggerAwareTrait;
+
 abstract class ApiClientAbstract
 {
 
+
+	use LoggerAwareTrait;
 
 
 	/**
@@ -63,7 +67,33 @@ abstract class ApiClientAbstract
 
 		preg_match("/(max\-age=(\d+))/i", $cache_control, $matches);
 
-		$max_age = $matches[2] ?? $this->getDefaultCacheLifetime();
+		if (!empty($matches[2])):
+			$max_age = $matches[2];
+
+			if ($this->logger):
+				$this->logger->debug( "Grabbed TTL from 'Cache-Control' header in DocumentAPI's response", [
+					'max_age' => $max_age,
+					'Cache-Control' => $cache_control,
+				]);
+			endif;
+
+		else:
+			$max_age = $this->getDefaultCacheLifetime();
+
+			if ($this->logger):
+				$this->logger->debug( "Can not grab TTL from 'Cache-Control' header in DocumentAPI's response, use default cache lifetime", [
+					'default_cache_lifetime' => $max_age,
+					'Cache-Control' => $cache_control,
+				]);
+			endif;
+		endif;
+
+		if ($this->logger) {
+			$this->logger->info( "Determined cache TTL for documents list", [
+				'TTL' => $max_age,
+			]);
+		}
+
 		return (int) $max_age;
 	}
 
