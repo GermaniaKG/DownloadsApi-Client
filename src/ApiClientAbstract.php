@@ -34,8 +34,6 @@ abstract class ApiClientAbstract
 
 
 
-
-
 	/**
 	 * Grabs the TTL from the "Cache-Control" header.
 	 * 
@@ -48,9 +46,30 @@ abstract class ApiClientAbstract
 
 		preg_match("/(max\-age=(\d+))/i", $cache_control, $matches);
 
-		$max_age = $matches[2] ?? $this->default_cache_lifetime;
+		$max_age = $matches[2] ?? $this->getDefaultCacheLifetime();
 		return (int) $max_age;
 	}
+
+
+	/**
+	 * @param int $seconds
+	 */
+	public function setDefaultCacheLifetime( int $seconds )
+	{
+		$this->default_cache_lifetime = $seconds;
+		return $this;
+	}
+
+
+
+	/**
+	 * @return int $seconds
+	 */
+	public function getDefaultCacheLifetime()
+	{
+		return $this->default_cache_lifetime;
+	}
+
 
 
 

@@ -33,6 +33,10 @@ class DownloadsApiHttpClient extends ApiClientAbstract
 	 */
 	protected $loglevel = "error";
 
+	/**
+	 * @var string
+	 */
+	protected $loglevel_success = "info";
 
 	/**
 	 * @var string
@@ -50,12 +54,13 @@ class DownloadsApiHttpClient extends ApiClientAbstract
 	 * @param LoggerInterface|null   $logger            Optional PSR-3 Logger.
 	 * @param string                 $loglevel          Optional PSR-3 Loglevel, defaults to `error `
 	 */
-	public function __construct(ClientInterface $client, CacheItemPoolInterface $cache_itempool, string $cache_user_id, LoggerInterface $logger = null, string $loglevel = "error" )
+	public function __construct(ClientInterface $client, CacheItemPoolInterface $cache_itempool, string $cache_user_id, LoggerInterface $logger = null, string $loglevel = "error", string $loglevel_success = "info"  )
 	{
 		$this->setClient( $client );
 		$this->cache_itempool = $cache_itempool;
 		$this->cache_user_id = $cache_user_id;
 		$this->loglevel = $loglevel;
+		$this->loglevel_success = $loglevel_success;
 		$this->setLogger( $logger ?: new NullLogger);
 	}
 
@@ -149,9 +154,10 @@ class DownloadsApiHttpClient extends ApiClientAbstract
     	$cache_item->expiresAfter( $lifetime );
     	$this->cache_itempool->save($cache_item);
 
-		$this->logger->notice( "Documents list stored in cache", [
+		$this->logger->log( $this->loglevel_success, "Documents list stored in cache", [
 			'path' => $path,
 			'count' => count($downloads),
+			'lifetime' => $lifetime,
 			'time' => ((microtime("float") - $start_time) * 1000) . "ms"
 		]);
 
@@ -172,6 +178,8 @@ class DownloadsApiHttpClient extends ApiClientAbstract
 		$this->client = $client;
 		return $this;
 	}	
+
+
 
 	/**
 	 * Returns a cache key for the current call.
