@@ -16,6 +16,37 @@ class DownloadsApiClientTest extends \PHPUnit\Framework\TestCase
 {
 
 
+	public function testDefaultCacheLifeTime()
+	{
+		$response = new Response(200, array(), json_encode(array(
+			'data' => array()
+		)));
+
+		$client = $this->prophesize( Client::class );
+		// $client->get( Argument::type("string"), Argument::type("array") )->willReturn( $response );
+		$client->getConfig( Argument::type("string") )->willReturn( array('Authorization' => "foo"));
+		$client_stub = $client->reveal();
+
+		$cache_item = $this->prophesize(CacheItemInterface::class);
+		$cache_item_stub = $cache_item->reveal();
+
+		$cache = $this->prophesize( CacheItemPoolInterface::class );
+		$cache_stub = $cache->reveal();
+
+		$sut = new DownloadsApiClient( $client_stub, $cache_stub );
+
+		// Test 
+		$default_cache_lifetime = $sut->getDefaultCacheLifetime();
+		$this->assertIsInt( $default_cache_lifetime );
+
+		$test_value = $default_cache_lifetime + 1;
+		$sut->setDefaultCacheLifetime( $test_value );
+
+		$new_default_cache_lifetime = $sut->getDefaultCacheLifetime();
+		$this->assertEquals( $test_value, $new_default_cache_lifetime );
+	}
+
+
 	public function testSimpleWithNothingInCache()
 	{
 		$base_uri = $GLOBALS['DOWNLOADS_API'];

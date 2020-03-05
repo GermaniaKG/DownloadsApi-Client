@@ -131,7 +131,8 @@ class DownloadsApiClient extends ApiClientAbstract
 		$this->logger->log($this->loglevel_success, "Documents list stored in cache", [
 			'path' => $path,
 			'count' => count($downloads),
-			'time' => ((microtime("float") - $start_time) * 1000) . "ms"
+			'lifetime' => $lifetime,
+			'runtime' => ((microtime("float") - $start_time) * 1000) . "ms"
 		]);
 
 		return new \ArrayIterator( $downloads );		
