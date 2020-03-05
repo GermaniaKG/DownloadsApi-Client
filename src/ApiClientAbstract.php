@@ -7,9 +7,26 @@ abstract class ApiClientAbstract
 
 
 	/**
+	 * The default cache TTL to use when the remote 
+	 * API does not deliver a cache TTL itself.
+	 *
+	 * Defaults to 4 hours
+	 * 
 	 * @var integer
 	 */
-	protected $default_cache_lifetime = 3600;
+	protected $default_cache_lifetime = 14400;
+
+
+
+	/**
+	 * Time window for Stash's "Precompute" invalidation method.
+	 * 
+	 * @see https://www.stashphp.com/Invalidation.html#precompute
+	 * 
+	 * @var integer
+	 */
+	protected $stash_precompute_time = 3600;
+
 
 
 	/**
@@ -49,6 +66,31 @@ abstract class ApiClientAbstract
 		$max_age = $matches[2] ?? $this->getDefaultCacheLifetime();
 		return (int) $max_age;
 	}
+
+
+
+
+	/**
+	 * @param int $seconds
+	 */
+	public function setStashPrecomputeTime( int $seconds )
+	{
+		$this->stash_precompute_time = $seconds;
+		return $this;
+	}
+
+
+
+	/**
+	 * @return int $seconds
+	 */
+	public function getStashPrecomputeTime()
+	{
+		return $this->stash_precompute_time;
+	}
+
+
+
 
 
 	/**
