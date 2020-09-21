@@ -103,7 +103,7 @@ abstract class ApiClientAbstract implements DownloadsApiClientInterface
 	/**
 	 * @param int $seconds
 	 */
-	public function setStashPrecomputeTime( int $seconds )
+	public function setStashPrecomputeTime( int $seconds ) : ApiClientAbstract
 	{
 		$this->stash_precompute_time = $seconds;
 		return $this;
@@ -114,7 +114,7 @@ abstract class ApiClientAbstract implements DownloadsApiClientInterface
 	/**
 	 * @return int $seconds
 	 */
-	public function getStashPrecomputeTime()
+	public function getStashPrecomputeTime() : int
 	{
 		return $this->stash_precompute_time;
 	}
@@ -126,7 +126,7 @@ abstract class ApiClientAbstract implements DownloadsApiClientInterface
 	/**
 	 * @param int $seconds
 	 */
-	public function setDefaultCacheLifetime( int $seconds )
+	public function setDefaultCacheLifetime( int $seconds ) : ApiClientAbstract
 	{
 		$this->default_cache_lifetime = $seconds;
 		return $this;
@@ -137,7 +137,7 @@ abstract class ApiClientAbstract implements DownloadsApiClientInterface
 	/**
 	 * @return int $seconds
 	 */
-	public function getDefaultCacheLifetime()
+	public function getDefaultCacheLifetime() : int
 	{
 		return $this->default_cache_lifetime;
 	}
@@ -153,7 +153,7 @@ abstract class ApiClientAbstract implements DownloadsApiClientInterface
 	 *
 	 * @throws DownloadsApiClientUnexpectedValueException
 	 */
-	protected function validateDecodedResponse( array $response_body_decoded )
+	protected function validateDecodedResponse( array $response_body_decoded ) : void
 	{
 		// "data" is quite common in JsonAPI responses,
 		// however, we need it as array.

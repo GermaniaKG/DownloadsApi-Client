@@ -172,7 +172,7 @@ class DownloadsApiClient extends ApiClientAbstract
 	 *
 	 * @throws DownloadsApiClientRuntimeException
 	 */
-	protected function setClient( Client $client )
+	protected function setClient( Client $client ) : DownloadsApiClient
 	{
 		$headers = $client->getConfig('headers') ?? array();
 		if (!$auth = $headers['Authorization'] ?? false):

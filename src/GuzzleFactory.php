@@ -15,7 +15,7 @@ class GuzzleFactory
 	 * @param  string $token The AuthAPI Access token string
 	 * @return Client        Guzzle Client
 	 */
-	public function __invoke( string $api, string $token )
+	public function __invoke( string $api, string $token ) : Client
 	{
 		$auth_header = sprintf("Bearer %s", $token);
 
