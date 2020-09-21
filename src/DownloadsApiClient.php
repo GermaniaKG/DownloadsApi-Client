@@ -12,6 +12,9 @@ use Psr\Cache\CacheItemPoolInterface;
 use Stash\Interfaces\ItemInterface as StashItemInterface;
 use Stash\Invalidation as StashInvalidation;
 
+/**
+ * The Guzzle Version of the Downloads API Client
+ */
 class DownloadsApiClient extends ApiClientAbstract
 {
 
@@ -46,7 +49,7 @@ class DownloadsApiClient extends ApiClientAbstract
 	 */
 	public function __construct(Guzzle $client, CacheItemPoolInterface $cache_itempool, LoggerInterface $logger = null, string $loglevel = "error", string $loglevel_success = "info" )
 	{
-		$this->setClient( $client );
+		$this->setGuzzleClient( $client );
 		$this->cache_itempool = $cache_itempool;
 		$this->loglevel = $loglevel;
 		$this->loglevel_success = $loglevel_success;
@@ -172,7 +175,7 @@ class DownloadsApiClient extends ApiClientAbstract
 	 *
 	 * @throws DownloadsApiClientRuntimeException
 	 */
-	protected function setClient( Guzzle $client ) : DownloadsApiClient
+	protected function setGuzzleClient( Guzzle $client ) : DownloadsApiClient
 	{
 		$headers = $client->getConfig('headers') ?? array();
 		if (!$auth = $headers['Authorization'] ?? false):
