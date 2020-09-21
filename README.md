@@ -44,7 +44,7 @@ $guzzle = (new GuzzleFactory)( $api, $token);
 
 ### The HTTP Client Factory
 
-Creates a `Http\Adapter\Guzzle6\Client ` which implements `Psr\Http\Client\ClientInterface`. See more in PHP-HTTP's [Guzzle 6 Adapter](http://docs.php-http.org/en/latest/clients/guzzle6-adapter.html) documentation.
+Creates a `Http\Adapter\Guzzle6\Client ` which implements PSR-18's `Psr\Http\Client\ClientInterface`. See more in PHP-HTTP's [Guzzle 6 Adapter](http://docs.php-http.org/en/latest/clients/guzzle6-adapter.html) documentation.
 
 ```php
 <?php
