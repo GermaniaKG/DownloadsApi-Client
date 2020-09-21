@@ -4,6 +4,6 @@ namespace Germania\DownloadsApiClient;
 
 interface DownloadsApiClientInterface
 {
-    public function all();
-    public function latest();
+    public function all() : iterable ;
+    public function latest() : iterable;
 }

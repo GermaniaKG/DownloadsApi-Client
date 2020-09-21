@@ -37,7 +37,7 @@ abstract class ApiClientAbstract implements DownloadsApiClientInterface
 	 * @param  array  $filters
 	 * @return \ArrayIterator
 	 */
-	public function all( array $filters = array() )
+	public function all( array $filters = array() ) : iterable
 	{
 		return $this->__invoke("all", $filters );
 	}
@@ -47,7 +47,7 @@ abstract class ApiClientAbstract implements DownloadsApiClientInterface
 	 * @param  array  $filters
 	 * @return \ArrayIterator
 	 */
-	public function latest( array $filters = array() )
+	public function latest( array $filters = array() ) : iterable
 	{
 		return $this->__invoke("latest", $filters );
 	}
