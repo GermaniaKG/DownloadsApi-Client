@@ -3,9 +3,12 @@ namespace tests;
 
 use Germania\DownloadsApiClient\GuzzleFactory;
 use GuzzleHttp\Client;
+use Prophecy\PhpUnit\ProphecyTrait;
 
 class GuzzleFactoryTest extends \PHPUnit\Framework\TestCase
 {
+
+    use ProphecyTrait;
 
 	public function testFactory()
 	{
@@ -21,9 +24,9 @@ class GuzzleFactoryTest extends \PHPUnit\Framework\TestCase
 		// http://httpbin.org/#/Auth/get_bearer
 		$response = $client->get("");
 		$this->assertEquals(200, $response->getStatusCode());
-			
+
 		$response_decoded = json_decode($response->getBody()->__toString());
-		
+
 		$this->assertObjectHasAttribute("authenticated", $response_decoded);
 		$this->assertTrue($response_decoded->authenticated);
 

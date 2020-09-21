@@ -18,10 +18,12 @@ use GuzzleHttp\Psr7\Response;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Cache\CacheItemInterface;
 use Psr\Http\Message\ResponseInterface;
+use Prophecy\PhpUnit\ProphecyTrait;
 
 class DownloadsApiHttpClientTest extends \PHPUnit\Framework\TestCase
 {
 
+    use ProphecyTrait;
 
 	public function testSimpleWithNothingInCache()
 	{
@@ -57,9 +59,9 @@ class DownloadsApiHttpClientTest extends \PHPUnit\Framework\TestCase
 		$sut = new DownloadsApiHttpClient( $client_stub, $cache_stub, $token );
 		$this->assertTrue( is_callable( $sut ));
 
-		$all = $sut->all([ 
+		$all = $sut->all([
 			"product" => "plissee",
-			"category" => "montageanleitung" 
+			"category" => "montageanleitung"
 		]);
 
 		$this->assertInstanceOf( \Traversable::class, $all);
@@ -95,9 +97,9 @@ class DownloadsApiHttpClientTest extends \PHPUnit\Framework\TestCase
 		$sut = new DownloadsApiHttpClient( $client, $cache_stub, $token );
 		$this->assertTrue( is_callable( $sut ));
 
-		$all = $sut->all([ 
+		$all = $sut->all([
 			"product" => "plissee",
-			"category" => "montageanleitung" 
+			"category" => "montageanleitung"
 		]);
 		$this->assertInstanceOf( \Traversable::class, $all);
 
@@ -164,9 +166,9 @@ class DownloadsApiHttpClientTest extends \PHPUnit\Framework\TestCase
 
 		$sut = new DownloadsApiHttpClient( $client_stub, $cache_stub, "foo" );
 
-		$all = $sut->all([ 
+		$all = $sut->all([
 			"product" => "plissee",
-			"category" => "montageanleitung" 
+			"category" => "montageanleitung"
 		]);
 		$this->assertInstanceOf( \Traversable::class, $all);
 		$this->assertEquals( 0, count($all));
@@ -219,4 +221,4 @@ class DownloadsApiHttpClientTest extends \PHPUnit\Framework\TestCase
 
 
 
-} 
+}

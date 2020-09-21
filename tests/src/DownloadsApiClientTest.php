@@ -11,10 +11,11 @@ use GuzzleHttp\Psr7\Response;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Cache\CacheItemInterface;
 use Psr\Http\Message\ResponseInterface;
+use Prophecy\PhpUnit\ProphecyTrait;
 
 class DownloadsApiClientTest extends \PHPUnit\Framework\TestCase
 {
-
+    use ProphecyTrait;
 
 	public function testDefaultCacheLifeTime()
 	{
@@ -35,7 +36,7 @@ class DownloadsApiClientTest extends \PHPUnit\Framework\TestCase
 
 		$sut = new DownloadsApiClient( $client_stub, $cache_stub );
 
-		// Test 
+		// Test
 		$default_cache_lifetime = $sut->getDefaultCacheLifetime();
 		$this->assertIsInt( $default_cache_lifetime );
 
@@ -66,7 +67,7 @@ class DownloadsApiClientTest extends \PHPUnit\Framework\TestCase
 
 		$sut = new DownloadsApiClient( $client_stub, $cache_stub );
 
-		// Test 
+		// Test
 		$stash_precompute_time = $sut->getStashPrecomputeTime();
 		$this->assertIsInt( $stash_precompute_time );
 
@@ -113,9 +114,9 @@ class DownloadsApiClientTest extends \PHPUnit\Framework\TestCase
 		$sut = new DownloadsApiClient( $client_stub, $cache_stub );
 		$this->assertTrue( is_callable( $sut ));
 
-		$all = $sut->all([ 
+		$all = $sut->all([
 			"product" => "plissee",
-			"category" => "montageanleitung" 
+			"category" => "montageanleitung"
 		]);
 
 		$this->assertInstanceOf( \Traversable::class, $all);
@@ -148,9 +149,9 @@ class DownloadsApiClientTest extends \PHPUnit\Framework\TestCase
 		$sut = new DownloadsApiClient( $client, $cache_stub );
 		$this->assertTrue( is_callable( $sut ));
 
-		$all = $sut->all([ 
+		$all = $sut->all([
 			"product" => "plissee",
-			"category" => "montageanleitung" 
+			"category" => "montageanleitung"
 		]);
 		$this->assertInstanceOf( \Traversable::class, $all);
 
@@ -213,9 +214,9 @@ class DownloadsApiClientTest extends \PHPUnit\Framework\TestCase
 
 		$sut = new DownloadsApiClient( $client_stub, $cache_stub );
 
-		$all = $sut->all([ 
+		$all = $sut->all([
 			"product" => "plissee",
-			"category" => "montageanleitung" 
+			"category" => "montageanleitung"
 		]);
 		$this->assertInstanceOf( \Traversable::class, $all);
 		$this->assertEquals( 0, count($all));
@@ -234,7 +235,7 @@ class DownloadsApiClientTest extends \PHPUnit\Framework\TestCase
 		$response = new Response( 200, array(), $body );
 
 		$client = $this->prophesize( Client::class );
-		$client->getConfig( Argument::type("string"))->willReturn( array("Authorization" => "foobar") );		
+		$client->getConfig( Argument::type("string"))->willReturn( array("Authorization" => "foobar") );
 		$client->get( Argument::type("string"), Argument::type("array"))->willReturn( $response );
 		$client_stub = $client->reveal();
 
@@ -269,4 +270,4 @@ class DownloadsApiClientTest extends \PHPUnit\Framework\TestCase
 
 
 
-} 
+}

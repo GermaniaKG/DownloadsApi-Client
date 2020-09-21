@@ -4,9 +4,11 @@ namespace tests;
 use Germania\DownloadsApiClient\HttpClientFactory;
 use Psr\Http\Client\ClientInterface;
 use GuzzleHttp\Psr7\Request;
+use Prophecy\PhpUnit\ProphecyTrait;
 
 class HttpClientFactoryTest extends \PHPUnit\Framework\TestCase
 {
+    use ProphecyTrait;
 
 	public $api = "http://httpbin.org/bearer";
 	public $token = "FooBar";
@@ -29,9 +31,9 @@ class HttpClientFactoryTest extends \PHPUnit\Framework\TestCase
 		$request = new Request("GET", "");
 		$response = $client->sendRequest($request);
 		$this->assertEquals(200, $response->getStatusCode());
-			
+
 		$response_decoded = json_decode($response->getBody()->__toString());
-		
+
 		$this->assertObjectHasAttribute("authenticated", $response_decoded);
 		$this->assertTrue($response_decoded->authenticated);
 
