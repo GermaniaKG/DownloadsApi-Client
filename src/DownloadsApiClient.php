@@ -57,10 +57,10 @@ class DownloadsApiClient extends ApiClientAbstract
 	/**
 	 * @param  string $path    Request URL path
 	 * @param  array  $filters Filters array
-	 * 
-	 * @return array
+	 *
+	 * @return iterable
 	 */
-	public function __invoke( string $path, array $filters = array() )
+	public function __invoke( string $path, array $filters = array() ) : iterable
 	{
 		$start_time = microtime("float");
 
@@ -69,7 +69,7 @@ class DownloadsApiClient extends ApiClientAbstract
 		// ---------------------------------------------------
 
 		$cache_key  = $this->getCacheKey($path, $filters);
-		$cache_item = $this->cache_itempool->getItem( $cache_key );		
+		$cache_item = $this->cache_itempool->getItem( $cache_key );
 
 		if ($cache_item instanceOf StashItemInterface):
 			$cache_item->setInvalidationMethod(StashInvalidation::PRECOMPUTE, $this->stash_precompute_time);
@@ -85,13 +85,13 @@ class DownloadsApiClient extends ApiClientAbstract
 				'time' => ((microtime("float") - $start_time) * 1000) . "ms"
 			]);
 
-			return new \ArrayIterator( $downloads );	
+			return new \ArrayIterator( $downloads );
 		endif;
 
 
-		// 
+		//
 		// When reaching this point, the stored documents are stale.
-		// 
+		//
 
 
 		// From Stash Docs:
@@ -120,8 +120,8 @@ class DownloadsApiClient extends ApiClientAbstract
 				'exception' => get_class($e)
 			]);
 			// Shortcut: empty result
-			return new \ArrayIterator( array() );	
-		}		
+			return new \ArrayIterator( array() );
+		}
 
 
 		// ---------------------------------------------------
@@ -130,7 +130,7 @@ class DownloadsApiClient extends ApiClientAbstract
 
 		try {
 			$response_body_decoded = (new JsonDecoder)($response, "associative");
-			$this->validateDecodedResponse( $response_body_decoded );	
+			$this->validateDecodedResponse( $response_body_decoded );
 		}
 		catch (\JsonException $e) {
 			throw new DownloadsApiClientUnexpectedValueException("DocumentsApi: Problems with API response", 0, $e);
@@ -146,7 +146,7 @@ class DownloadsApiClient extends ApiClientAbstract
 
 		$downloads = array_column($response_body_decoded['data'], "attributes");
 
-		$cache_item->set( $downloads );	
+		$cache_item->set( $downloads );
 		$lifetime = $this->getCacheLifetime( $response );
     	$cache_item->expiresAfter( $lifetime );
     	$this->cache_itempool->save($cache_item);
@@ -158,7 +158,7 @@ class DownloadsApiClient extends ApiClientAbstract
 			'runtime' => ((microtime("float") - $start_time) * 1000) . "ms"
 		]);
 
-		return new \ArrayIterator( $downloads );		
+		return new \ArrayIterator( $downloads );
 	}
 
 
@@ -167,7 +167,7 @@ class DownloadsApiClient extends ApiClientAbstract
 	 *
 	 * The client is examined if it is configured to send an Authorization header;
 	 * if not, a DownloadsApiClientRuntimeException will be thrown.
-	 * 
+	 *
 	 * @inhertDoc
 	 *
 	 * @throws DownloadsApiClientRuntimeException
@@ -181,12 +181,12 @@ class DownloadsApiClient extends ApiClientAbstract
 
 		$this->client = $client;
 		return $this;
-	}	
+	}
 
 
 	/**
 	 * Returns a cache key for the current call.
-	 * 
+	 *
 	 * @param  string $path
 	 * @param  array $filters
 	 * @return string
