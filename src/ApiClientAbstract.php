@@ -3,7 +3,7 @@ namespace Germania\DownloadsApiClient;
 
 use Psr\Log\LoggerAwareTrait;
 
-abstract class ApiClientAbstract
+abstract class ApiClientAbstract implements DownloadsApiClientInterface
 {
 
 
@@ -11,11 +11,11 @@ abstract class ApiClientAbstract
 
 
 	/**
-	 * The default cache TTL to use when the remote 
+	 * The default cache TTL to use when the remote
 	 * API does not deliver a cache TTL itself.
 	 *
 	 * Defaults to 4 hours
-	 * 
+	 *
 	 * @var integer
 	 */
 	protected $default_cache_lifetime = 14400;
@@ -24,9 +24,9 @@ abstract class ApiClientAbstract
 
 	/**
 	 * Time window for Stash's "Precompute" invalidation method.
-	 * 
+	 *
 	 * @see https://www.stashphp.com/Invalidation.html#precompute
-	 * 
+	 *
 	 * @var integer
 	 */
 	protected $stash_precompute_time = 3600;
@@ -57,7 +57,7 @@ abstract class ApiClientAbstract
 
 	/**
 	 * Grabs the TTL from the "Cache-Control" header.
-	 * 
+	 *
 	 * @param  \Psr\Http\Message\ResponseInterface $response [description]
 	 * @return int
 	 */
@@ -147,7 +147,7 @@ abstract class ApiClientAbstract
 
 	/**
 	 * Validates the decoded response, throwing things in error case.
-	 * 
+	 *
 	 * @param  array  $response_body_decoded
 	 * @return void
 	 *
@@ -155,7 +155,7 @@ abstract class ApiClientAbstract
 	 */
 	protected function validateDecodedResponse( array $response_body_decoded )
 	{
-		// "data" is quite common in JsonAPI responses, 
+		// "data" is quite common in JsonAPI responses,
 		// however, we need it as array.
 
 		if (!isset( $response_body_decoded['data'] )):
@@ -167,5 +167,5 @@ abstract class ApiClientAbstract
 			throw new DownloadsApiClientUnexpectedValueException("DocumentsApi response: Element 'data' is not array");
 		endif;
 
-	}	
+	}
 }

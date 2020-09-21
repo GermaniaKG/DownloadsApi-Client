@@ -2,6 +2,7 @@
 namespace tests;
 
 use Germania\DownloadsApiClient\DownloadsApiClient;
+use Germania\DownloadsApiClient\DownloadsApiClientInterface;
 use Germania\DownloadsApiClient\DownloadsApiClientUnexpectedValueException;
 use Germania\DownloadsApiClient\DownloadsApiClientRuntimeException;
 use GuzzleHttp\Client;
@@ -35,6 +36,7 @@ class DownloadsApiClientTest extends \PHPUnit\Framework\TestCase
 		$cache_stub = $cache->reveal();
 
 		$sut = new DownloadsApiClient( $client_stub, $cache_stub );
+        $this->assertInstanceOf(DownloadsApiClientInterface::class, $sut);
 
 		// Test
 		$default_cache_lifetime = $sut->getDefaultCacheLifetime();

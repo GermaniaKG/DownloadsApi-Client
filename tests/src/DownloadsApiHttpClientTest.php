@@ -2,6 +2,7 @@
 namespace tests;
 
 use Germania\DownloadsApiClient\DownloadsApiHttpClient;
+use Germania\DownloadsApiClient\DownloadsApiClientInterface;
 use Germania\DownloadsApiClient\DownloadsApiClientUnexpectedValueException;
 use Germania\DownloadsApiClient\DownloadsApiClientRuntimeException;
 
@@ -57,6 +58,8 @@ class DownloadsApiHttpClientTest extends \PHPUnit\Framework\TestCase
 		$cache_stub = $cache->reveal();
 
 		$sut = new DownloadsApiHttpClient( $client_stub, $cache_stub, $token );
+        $this->assertInstanceOf(DownloadsApiClientInterface::class, $sut);
+
 		$this->assertTrue( is_callable( $sut ));
 
 		$all = $sut->all([
