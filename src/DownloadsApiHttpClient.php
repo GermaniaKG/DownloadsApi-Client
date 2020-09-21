@@ -15,6 +15,10 @@ use GuzzleHttp\Psr7\Request;
 use Stash\Interfaces\ItemInterface as StashItemInterface;
 use Stash\Invalidation as StashInvalidation;
 
+
+/**
+ * The PSR-18 Version of the Downloads API Client
+ */
 class DownloadsApiHttpClient extends ApiClientAbstract
 {
 
