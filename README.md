@@ -26,8 +26,6 @@ $ composer require germania-kg/downloadsapi-client
 
 ## Usage
 
-The *DownloadsApiClient* requires either a **Guzzle Client** or **PSR-18 HTTP Client**. 
-
 ### The Guzzle Factory
 
 The *DownloadsApiClient* requires a **Guzzle Client** which will perform the API requests. The Guzzle client can be obtained from **GuzzleFactory**, using the *DownloadsApi* *endpoint* and the *AuthApi Access token*.
