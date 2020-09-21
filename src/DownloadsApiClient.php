@@ -2,7 +2,7 @@
 namespace Germania\DownloadsApiClient;
 
 use Germania\JsonDecoder\JsonDecoder;
-use GuzzleHttp\Client;
+use GuzzleHttp\Client as Guzzle;
 use GuzzleHttp\Exception\RequestException;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -39,12 +39,12 @@ class DownloadsApiClient extends ApiClientAbstract
 
 
 	/**
-	 * @param Client                 $client            Readily configured Guzzle Client
+	 * @param Guzzle                 $client            Readily configured Guzzle Client
 	 * @param CacheItemPoolInterface $cache_itempool    PSR-6 Cache ItemPool
 	 * @param LoggerInterface|null   $logger            Optional PSR-3 Logger.
 	 * @param string                 $loglevel          Optional PSR-3 Loglevel, defaults to `error `
 	 */
-	public function __construct(Client $client, CacheItemPoolInterface $cache_itempool, LoggerInterface $logger = null, string $loglevel = "error", string $loglevel_success = "info" )
+	public function __construct(Guzzle $client, CacheItemPoolInterface $cache_itempool, LoggerInterface $logger = null, string $loglevel = "error", string $loglevel_success = "info" )
 	{
 		$this->setClient( $client );
 		$this->cache_itempool = $cache_itempool;
@@ -172,11 +172,11 @@ class DownloadsApiClient extends ApiClientAbstract
 	 *
 	 * @throws DownloadsApiClientRuntimeException
 	 */
-	protected function setClient( Client $client ) : DownloadsApiClient
+	protected function setClient( Guzzle $client ) : DownloadsApiClient
 	{
 		$headers = $client->getConfig('headers') ?? array();
 		if (!$auth = $headers['Authorization'] ?? false):
-			throw new DownloadsApiClientRuntimeException("DocumentsApi: HTTP Client lacks Authorization header.");
+			throw new DownloadsApiClientRuntimeException("DocumentsApi: Guzzle HTTP Client lacks Authorization header.");
 		endif;
 
 		$this->client = $client;
