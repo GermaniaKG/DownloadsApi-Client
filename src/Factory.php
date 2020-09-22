@@ -1,9 +1,10 @@
 <?php
 namespace Germania\DownloadsApiClient;
 
-use Psr\Http\Client\ClientInterface;
-use Http\Adapter\Guzzle6\Client as GuzzleAdapter;
+use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\Psr7\Request as GuzzleRequest;
+use Http\Adapter\Guzzle6\Client as GuzzleAdapter;
+use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 
 
@@ -21,7 +22,12 @@ class Factory implements FactoryInterface
 	 */
 	public function createClient() : ClientInterface
 	{
-		return GuzzleAdapter::createWithConfig([]);
+		$guzzle = new GuzzleClient();
+
+        if ($guzzle instanceOf ClientInterface) {
+            return $guzzle;
+        }
+        return new GuzzleAdapter($guzzle);
 	}
 
 

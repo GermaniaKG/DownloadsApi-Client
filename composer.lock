@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "df7cc01bbc91175fbc63f0d8809d6578",
+    "content-hash": "9ad2a466f8abb00fb45b570a14c16ea3",
     "packages": [
         {
             "name": "germania-kg/jsondecoder",
