@@ -1,7 +1,7 @@
 <?php
 namespace Germania\DownloadsApiClient;
 
-interface DownloadsApiClientExceptionInterface
+interface ApiClientExceptionInterface
 {
 
 }

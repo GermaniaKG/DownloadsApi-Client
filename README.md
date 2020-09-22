@@ -26,68 +26,56 @@ $ composer require germania-kg/downloadsapi-client
 
 ## Usage
 
-### The Guzzle Factory
+### Prerequisites
 
-The *DownloadsApiClient* requires a **Guzzle Client** which will perform the API requests. The Guzzle client can be obtained from **GuzzleFactory**, using the *DownloadsApi* *endpoint* and the *AuthApi Access token*.
+The **ApiClient** requires a PSR-18 *HTTP Client* as well as a *PSR-7 Request* template. While you of course may use your favourite implementations, the Factory class will create both the PSR-18's `Psr\Http\Client\ClientInterface` and PSR-7 `Psr\Http\Message\RequestInterface` instances on the shoulders of Guzzle.
+
+The PSR-7 Request carries the API endpoint and the Authorization header, and the actal API requests will be cloned from this one.
 
 ```php
 <?php
-use Germania\DownloadsApiClient\GuzzleFactory;
+use Germania\DownloadsApiClient\Factory;
 
-// Have your DownloadsAPI endpoint and Access token at hand
-$api = "https://api.example.com/"
+$api   = "https://api.example.com/"
 $token = "manymanyletters"; 
 
-// Setup a Guzzle Client that will ask Downloads API
-$guzzle = (new GuzzleFactory)( $api, $token);
+$factory     = new Factory;
+$http_client = $factory->createClient();
+$request     = $factory->createRequest( $api, $token);
 ```
 
-### The HTTP Client Factory
-
-Creates a `Http\Adapter\Guzzle6\Client ` which implements `Psr\Http\Client\ClientInterface`. See more in PHP-HTTP's [Guzzle 6 Adapter](http://docs.php-http.org/en/latest/clients/guzzle6-adapter.html) documentation.
+Furthermore, using a `Psr\Cache\CacheItemPoolInterface` and a `Psr\Log\LoggerInterface` is always useful:
 
 ```php
-<?php
-use Germania\DownloadsApiClient\HttpClientFactory;
-
-// Have your DownloadsAPI endpoint and Access token at hand
-$api = "https://api.example.com/"
-$token = "manymanyletters"; 
-
-// Create Guzzle Client that will ask Downloads API
-$http_client = (new HttpClientFactory)( $api, $token);
-```
-
-
-
-### The DownloadsApiClient
-
-The **DownloadsApiClient** requires the above *Guzzle Client* as well as a *PSR-6 Cache ItemPool.* It optionally accepts a *PSR-3 Logger* and/or a PSR-3 *Loglevel names* for both error and success cases.
-
-```php
-<?php
-use Germania\DownloadsApiClient\DownloadsApiClient;
-use Germania\DownloadsApiClient\GuzzleFactory;
-
-$guzzle = (new GuzzleFactory)( $api, $token);
 $cache  = new \Stash\Pool( ... );
 $logger = new \Monolog\Logger( ... );
+```
 
-$client = new DownloadsApiClient($guzzle, $cache );
-$client = new DownloadsApiClient($guzzle, $cache, $logger );
-$client = new DownloadsApiClient($guzzle, $cache, $logger, "alert" );
-$client = new DownloadsApiClient($guzzle, $cache, $logger, "error", "info" );
+
+
+### The ApiClient
+
+The **ApiClient** requires a PSR-18 *HTTP Client* as well as a *PSR-7 Request* template and a *PSR-6 Cache ItemPool*. It optionally accepts a *PSR-3 Logger* and/or PSR-3 *Loglevel names* for both error and success cases.
+
+```php
+<?php
+use Germania\DownloadsApiClient\ApiClient;
+
+$client = new ApiClient($client, $request, $cache );
+$client = new ApiClient($client, $request, $cache, $logger );
+$client = new ApiClient($client, $request, $cache, $logger, "alert" );
+$client = new ApiClient($client, $request, $cache, $logger, "error", "info" );
 ```
 
 
 
 ### Security considerations: The caching engine
 
-The results are stored in the PSR-6 cache passed to the *DownloadsApiClient* constructor, using a *cache key* to look up the results next time. 
+The results are stored in the PSR-6 cache passed to the *ApiClient* constructor, using a *cache key* to look up the results next time. 
 
-This *cache key* contains a fast-to-compute **sha256 hash** of the authorization header. The downside is, your auth tokens are vulnerable to *hash collision* attacks, when two different string produce the same hash. 
+This *cache key* contains amongst others a fast-to-compute **sha256 hash** of the authorization header. The downside is, your auth tokens are vulnerable to *hash collision* attacks, when two different string produce the same hash. 
 
-The auth token hopefully has a baked-in lifetime. Once this lifetime is reached, the auth token is worthless anyway. And, when an attacker has file access to your cache, he will have all results, regardless if he has your auth tokens or not. 
+Your auth token hopefully has a baked-in lifetime. Once this lifetime is reached, the auth token is worthless anyway. And, when an attacker has file access to your cache, he will have all results, regardless if he has your auth tokens or not. 
 
 **Security tips:**
 
@@ -97,11 +85,9 @@ The auth token hopefully has a baked-in lifetime. Once this lifetime is reached,
 
 
 
-
-
 ### Retrieve documents
 
-The **DownloadsApiClient** provides two public methods, ***all*** and ***latest***, which return an ***ArrayIterator*** with the documents provided by *Germania's DownloadsAPI*. 
+The **ApiClient** provides two public methods, ***all*** and ***latest***, which return an ***ArrayIterator*** with the documents provided by *Germania's DownloadsAPI*. 
 
 The resulting documents list will have been pre-filtered according to the permissions related with the Access token sent along with the *Guzzle Client* request.
 
@@ -191,30 +177,21 @@ $downloads = $downloads_client->all($filters);
 ```php
 <?php
 use Germania\DownloadsApiClient\{
-  DownloadsApiClientExceptionInterface,
-	DownloadsApiClientRuntimeException,
-  DownloadsApiClientUnexpectedValueException
+  ApiClientExceptionInterface,
+	ApiClientRuntimeException,
+  ApiClientUnexpectedValueException
 };
 ```
 
 
 
-### Exceptions on instantiation
-
-When the *Guzzle* client provided to the *DownloadsApiClient* lacks an `Authorization` header, a **DownloadsApiClientRuntimeException** will be thrown. This class implements `DownloadsApiClientExceptionInterface` and extends `\RuntimeException`. 
-
 ### Exceptions during request
 
-Just in case the *DownloadsApiClient* (to be exact: the Guzze client) receives a *Guzzle* *[**RequestException**](http://docs.guzzlephp.org/en/stable/quickstart.html#exceptions)*, i.e. something wrong with the request or on the server, both the *all* and *latest* methods will return an **empty ArrayIterator**.  The error will be logged to the *PSR-3 Logger* passed to the constructor.
-
-**Please note:**
-*Guzzle* [**TransferExceptions**](http://docs.guzzlephp.org/en/stable/quickstart.html#exceptions) – thrown while transferring requests – will not be caught internally and instead will bubble up.
+Just in case the *ApiClient* throws an exception, both the *all* and *latest* methods will return an **empty ArrayIterator**.  The error will be logged to the *PSR-3 Logger* passed to the constructor.
 
 ### Unexpected values in response
 
-Whenever the response can't be decoded to a useful array, a  **DownloadsApiClientUnexpectedValueException** will be thrown. This class implements `DownloadsApiClientExceptionInterface` and extends `\UnexpectedValueException`. 
-
-
+Whenever the response can't be decoded to a useful array, a  **ApiClientUnexpectedValueException** will be thrown. This class implements `ApiClientExceptionInterface` and extends `\UnexpectedValueException`.  The exception will be logged and bubble up.
 
 
 
