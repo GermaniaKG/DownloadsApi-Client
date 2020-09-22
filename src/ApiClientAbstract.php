@@ -3,7 +3,7 @@ namespace Germania\DownloadsApiClient;
 
 use Psr\Log\LoggerAwareTrait;
 
-abstract class ApiClientAbstract implements DownloadsApiClientInterface
+abstract class ApiClientAbstract implements ApiClientInterface
 {
 
 
@@ -22,20 +22,11 @@ abstract class ApiClientAbstract implements DownloadsApiClientInterface
 
 
 
-	/**
-	 * Time window for Stash's "Precompute" invalidation method.
-	 *
-	 * @see https://www.stashphp.com/Invalidation.html#precompute
-	 *
-	 * @var integer
-	 */
-	protected $stash_precompute_time = 3600;
-
-
 
 	/**
+     * @inheritDoc
+     *
 	 * @param  array  $filters
-	 * @return \ArrayIterator
 	 */
 	public function all( array $filters = array() ) : iterable
 	{
@@ -44,8 +35,9 @@ abstract class ApiClientAbstract implements DownloadsApiClientInterface
 
 
 	/**
-	 * @param  array  $filters
-	 * @return \ArrayIterator
+     * @inheritDoc
+     *
+	 * @param  array $filters
 	 */
 	public function latest( array $filters = array() ) : iterable
 	{
@@ -53,71 +45,6 @@ abstract class ApiClientAbstract implements DownloadsApiClientInterface
 	}
 
 
-
-
-	/**
-	 * Grabs the TTL from the "Cache-Control" header.
-	 *
-	 * @param  \Psr\Http\Message\ResponseInterface $response [description]
-	 * @return int
-	 */
-	protected function getCacheLifetime( $response ) : int
-	{
-		$cache_control = $response->getHeaderLine('Cache-Control');
-
-		preg_match("/(max\-age=(\d+))/i", $cache_control, $matches);
-
-		if (!empty($matches[2])):
-			$max_age = $matches[2];
-
-			if ($this->logger):
-				$this->logger->debug( "Grabbed TTL from 'Cache-Control' header in DocumentAPI's response", [
-					'max_age' => $max_age,
-					'Cache-Control' => $cache_control,
-				]);
-			endif;
-
-		else:
-			$max_age = $this->getDefaultCacheLifetime();
-
-			if ($this->logger):
-				$this->logger->debug( "Can not grab TTL from 'Cache-Control' header in DocumentAPI's response, use default cache lifetime", [
-					'default_cache_lifetime' => $max_age,
-					'Cache-Control' => $cache_control,
-				]);
-			endif;
-		endif;
-
-		if ($this->logger) {
-			$this->logger->info( "Determined cache TTL for documents list", [
-				'TTL' => $max_age,
-			]);
-		}
-
-		return (int) $max_age;
-	}
-
-
-
-
-	/**
-	 * @param int $seconds
-	 */
-	public function setStashPrecomputeTime( int $seconds ) : ApiClientAbstract
-	{
-		$this->stash_precompute_time = $seconds;
-		return $this;
-	}
-
-
-
-	/**
-	 * @return int $seconds
-	 */
-	public function getStashPrecomputeTime() : int
-	{
-		return $this->stash_precompute_time;
-	}
 
 
 
@@ -143,29 +70,4 @@ abstract class ApiClientAbstract implements DownloadsApiClientInterface
 	}
 
 
-
-
-	/**
-	 * Validates the decoded response, throwing things in error case.
-	 *
-	 * @param  array  $response_body_decoded
-	 * @return void
-	 *
-	 * @throws DownloadsApiClientUnexpectedValueException
-	 */
-	protected function validateDecodedResponse( array $response_body_decoded ) : void
-	{
-		// "data" is quite common in JsonAPI responses,
-		// however, we need it as array.
-
-		if (!isset( $response_body_decoded['data'] )):
-			throw new DownloadsApiClientUnexpectedValueException("DocumentsApi response: Missing 'data' element");
-		endif;
-
-
-		if (!is_array( $response_body_decoded['data'] )):
-			throw new DownloadsApiClientUnexpectedValueException("DocumentsApi response: Element 'data' is not array");
-		endif;
-
-	}
 }
