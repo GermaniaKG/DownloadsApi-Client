@@ -13,6 +13,8 @@ use Psr\Cache\CacheItemPoolInterface;
 
 use Stash\Interfaces\ItemInterface as StashItemInterface;
 use Stash\Invalidation as StashInvalidation;
+use Germania\ResponseDecoder\JsonApiResponseDecoder;
+use Germania\ResponseDecoder\ResponseDecoderTrait;
 
 
 /**
@@ -22,7 +24,7 @@ class ApiClient extends ApiClientAbstract
 {
 
 
-	use LoggerAwareTrait;
+	use LoggerAwareTrait, ResponseDecoderTrait;
 
 	/**
 	 * @var ClientInterface
@@ -88,7 +90,7 @@ class ApiClient extends ApiClientAbstract
 		$this->error_loglevel = $error_loglevel;
 		$this->success_loglevel = $success_loglevel;
 
-        $this->response_decoder = new JsonDataArrayResponseDecoder;
+        $this->setResponseDecoder( new JsonApiResponseDecoder );
 	}
 
 
@@ -179,7 +181,7 @@ class ApiClient extends ApiClientAbstract
 		// ---------------------------------------------------
 
 		try {
-			$downloads = ($this->response_decoder)($response);
+            $downloads = $this->getResponseDecoder()->getResourceCollection($response);
 		}
 		catch (\Throwable $e) {
             $msg = sprintf("DocumentsApi: %s", $e->getMessage());
@@ -264,16 +266,6 @@ class ApiClient extends ApiClientAbstract
 		$this->client = $client;
 		return $this;
 	}
-
-
-    /**
-     * @param callable $response_decoder
-     */
-    public function setResponseDecoder( callable $response_decoder ) : ApiClientAbstract
-    {
-        $this->response_decoder = $response_decoder;
-        return $this;
-    }
 
 
 

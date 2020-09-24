@@ -24,12 +24,13 @@
 
 	"require": {
 		"php": "^7.0",
-		"guzzlehttp/guzzle": "^6.3",
+		"guzzlehttp/guzzle": "^6.0",
 		"germania-kg/jsondecoder": "^1.0",
 		"psr/log": "^1.1",
 		"psr/cache": "^1.0",
 		"psr/http-client": "^1.0",
-		"php-http/client-implementation": "^1.0"
+		"php-http/client-implementation": "^1.0",
+		"germania-kg/response-decoder": "^1.0"
 	},
 
 	"require-dev": {
