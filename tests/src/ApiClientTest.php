@@ -12,6 +12,8 @@ use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Message\RequestInterface;
 
 use Germania\DownloadsApiClient\Factory;
+use Germania\ResponseDecoder\JsonApiResponseDecoder;
+use Germania\ResponseDecoder\ReponseDecoderException;
 
 use GuzzleHttp\Client;
 use Prophecy\Argument;
@@ -70,7 +72,7 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase
      */
     public function testResponseDecorderInterceptors( $sut )
     {
-        $res = $sut->setResponseDecoder(function() {});
+        $res = $sut->setResponseDecoder(new JsonApiResponseDecoder);
         $this->assertInstanceOf(ApiClientAbstract::class, $res);
     }
 
@@ -255,10 +257,10 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase
 
 		$sut = new ApiClient( $client, $this->request, $cache );
 
-		$this->expectException( ApiClientUnexpectedValueException::class );
+		$this->expectException( ReponseDecoderException::class );
 		$all = $sut->all();
 
-		$this->expectException( ApiClientUnexpectedValueException::class );
+		$this->expectException( ReponseDecoderException::class );
 		$latest = $sut->latest([  "product" => "plissee" ]);
 	}
 

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9ad2a466f8abb00fb45b570a14c16ea3",
+    "content-hash": "dc890f345fdf035138ec7f22ff52b4d4",
     "packages": [
         {
             "name": "germania-kg/jsondecoder",
@@ -46,6 +46,53 @@
             ],
             "description": " JSON decoding solution with JsonException support for older PHP versions",
             "time": "2019-08-22T06:50:14+00:00"
+        },
+        {
+            "name": "germania-kg/response-decoder",
+            "version": "1.0.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/GermaniaKG/ResponseDecoder.git",
+                "reference": "eed0b70d646b661cea1f1a4d83fbda0805d6c948"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/GermaniaKG/ResponseDecoder/zipball/eed0b70d646b661cea1f1a4d83fbda0805d6c948",
+                "reference": "eed0b70d646b661cea1f1a4d83fbda0805d6c948",
+                "shasum": ""
+            },
+            "require": {
+                "germania-kg/jsondecoder": "^1.0",
+                "php": "^7.1",
+                "psr/http-message": "^1.0"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^2.0",
+                "php": "^7.3",
+                "php-coveralls/php-coveralls": "^2.0",
+                "phpspec/prophecy-phpunit": "^2.0",
+                "phpunit/phpunit": "^9.0",
+                "spatie/phpunit-watcher": "^1.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Germania\\ResponseDecoder\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Carsten Witt",
+                    "email": "carsten.witt@germania-kg.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Interface and Trait for API response decoder",
+            "time": "2020-09-23T09:01:11+00:00"
         },
         {
             "name": "guzzlehttp/guzzle",
