@@ -23,8 +23,8 @@
 	},
 
 	"require": {
-		"php": "^7.0",
-		"guzzlehttp/guzzle": "^6.0",
+		"php": "^7.0|^8.0",
+		"guzzlehttp/guzzle": "^7.0",
 		"germania-kg/jsondecoder": "^1.0",
 		"psr/log": "^1.1",
 		"psr/cache": "^1.0",
@@ -34,9 +34,8 @@
 	},
 
 	"require-dev": {
-		"php": "^7.3",
-		"php-http/guzzle6-adapter": "^2.0",
-		"tedivm/stash": "^0.14",
+		"php-http/guzzle7-adapter": "^0.1",
+		"symfony/cache": "^5.0",
     "phpunit/phpunit": "^9.0",
     "phpspec/prophecy-phpunit": "^2.0",
     "php-coveralls/php-coveralls": "^2.0",
