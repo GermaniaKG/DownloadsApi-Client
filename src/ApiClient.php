@@ -57,6 +57,10 @@ class ApiClient extends ApiClientAbstract
     protected $response_decoder;
 
 
+    /**
+     * @var string
+     */
+    protected $cache_key_separator = "|";
 
     /**
      * Custom time window for Stash's "Precompute" invalidation method.
@@ -282,7 +286,7 @@ class ApiClient extends ApiClientAbstract
         $auth_hash = hash("sha256", $this->request->getHeaderLine('Authorization'));
         $filters_hash = md5(serialize($filters));
 
-		return implode("/", [
+		return implode($this->cache_key_separator, [
 			$auth_hash,
 			$path,
 			$filters_hash
