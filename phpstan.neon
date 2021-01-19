@@ -1,0 +1,23 @@
+# phpstan.neon
+
+parameters:
+    level: 5
+    paths:
+        - src
+        - tests
+
+    # checkMissingIterableValueType: false
+
+    excludePaths:
+        - tests/src/*
+
+    ignoreErrors:
+        -
+            # Suppress error messages in unit tests
+            # where on purpose methods are passed wrong variable types, such as:
+            #
+            # Parameter #2 $foo of callable Vendor\MyClass expects bool|string, int|false given
+            #
+            message: '#Parameter \#[0-9]+ \$[a-zA-Z0-9_]+ of .+ expects [a-zA-Z0-9\|_\\]+, [a-zA-Z0-9\|\\]+ given#'
+            path: tests/src/*.php
+
