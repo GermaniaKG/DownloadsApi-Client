@@ -1,5 +1,5 @@
 <?php
-namespace Germania\DownloadsApiClient;
+namespace Germania\DownloadsApi;
 
 use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\Psr7\Request as GuzzleRequest;

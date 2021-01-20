@@ -1,13 +1,15 @@
 <?php
 namespace tests;
 
-use Germania\DownloadsApiClient\{
+use Germania\DownloadsApi\{
     Factory,
-    ApiClient,
-    ApiClientAbstract,
-    ApiClientInterface,
-    ApiClientUnexpectedValueException,
-    ApiClientRuntimeException
+    DownloadsApi,
+    DownloadsApiAbstract,
+    DownloadsApiInterface,
+    Exceptions\DownloadsApiExceptionInterface,
+    Exceptions\DownloadsApiResponseException,
+    Exceptions\DownloadsApiUnexpectedValueException,
+    Exceptions\DownloadsApiRuntimeException
 };
 
 
@@ -28,7 +30,7 @@ use GuzzleHttp\Psr7\Response;
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 
-class ApiClientTest extends \PHPUnit\Framework\TestCase
+class DownloadsApiTest extends \PHPUnit\Framework\TestCase
 {
 
     use ProphecyTrait,
@@ -58,25 +60,45 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase
 
 
 
-	public function testInstantiation() : ApiClient
+    /**
+     * Creates a new Api client.
+     *
+     * @return DownloadsApi
+     */
+	public function testInstantiation() : DownloadsApi
 	{
-		$sut = new ApiClient( $this->client, $this->request );
+		$sut = new DownloadsApi( $this->client, $this->request );
         $sut->setLogger( $this->getLogger());
 
-        $this->assertInstanceOf(ApiClientInterface::class, $sut);
-		$this->assertIsCallable( $sut );
+        $this->assertInstanceOf(DownloadsApiInterface::class, $sut);
 
         return $sut;
 	}
 
 
-    /**
-     * @depends testInstantiation
-     */
-    public function testResponseDecorderInterceptors( ApiClientInterface $sut ) : void
+    public function testResponseDecorderInterceptors() : void
     {
+        $sut = new DownloadsApi( $this->client, $this->request );
         $res = $sut->setResponseDecoder(new JsonApiResponseDecoder);
-        $this->assertInstanceOf(ApiClientAbstract::class, $res);
+        $this->assertInstanceOf(DownloadsApiAbstract::class, $res);
+    }
+
+
+    public function testClientInterceptors() : void
+    {
+        $sut = new DownloadsApi( $this->client, $this->request );
+        $psr_18 = $this->prophesize(ClientInterface::class)->reveal();
+        $res = $sut->setClient($psr_18);
+        $this->assertInstanceOf(DownloadsApiAbstract::class, $res);
+    }
+
+
+    public function testRequestInterceptors() : void
+    {
+        $sut = new DownloadsApi( $this->client, $this->request );
+        $psr_7 = $this->prophesize(RequestInterface::class)->reveal();
+        $res = $sut->setRequest($psr_7);
+        $this->assertInstanceOf(DownloadsApiAbstract::class, $res);
     }
 
 
@@ -103,7 +125,7 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase
      * @depends testInstantiation
      * @param mixed $filter_params
      */
-    public function testRealApiCall($filter_params, ApiClientInterface $sut ) : void
+    public function testRealApiCall($filter_params, DownloadsApiInterface $sut ) : void
     {
         $all = $sut->all($filter_params);
         $this->assertIsIterable($all);
@@ -117,26 +139,41 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase
 
 
     /**
-     * @dataProvider provideFilterParameters
+     * @dataProvider provideInvalidAuthentication
      * @depends testInstantiation
-     * @param mixed $filter_params
+     * @param mixed $base_uri
+     * @param mixed $invalid_token
      */
-    public function testInvalidAuthentication( $filter_params, ApiClientInterface $sut ) : void
+    public function testInvalidAuthentication( $base_uri, $invalid_token, DownloadsApiInterface $sut ) : void
     {
-        $base_uri      = $GLOBALS['DOWNLOADS_API'];
-        $invalid_token ="invalid";
-
         $factory = new Factory;
         $request = $factory->createRequest($base_uri, $invalid_token);
 
         $sut->setRequest( $request );
 
-        $this->expectException( ApiClientRuntimeException::class );
+        $filter_params = array();
+
+        $this->expectException( DownloadsApiResponseException::class );
+        $this->expectException( DownloadsApiExceptionInterface::class );
         $all = $sut->all( $filter_params);
 
-        $this->expectException( ApiClientRuntimeException::class );
+        $this->expectException( DownloadsApiResponseException::class );
+        $this->expectException( DownloadsApiExceptionInterface::class );
         $latest = $sut->latest($filter_params);
     }
+
+    public function provideInvalidAuthentication()
+    {
+        return array(
+            [ $GLOBALS['DOWNLOADS_API'], "invalid" ],
+            [ $GLOBALS['DOWNLOADS_API'], "" ],
+            [ "invalid",    $GLOBALS['AUTH_TOKEN'] ],
+            [ "",           $GLOBALS['AUTH_TOKEN'] ],
+            [ "",       "" ],
+        );
+    }
+
+
 
 
 
@@ -145,7 +182,7 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase
      * @depends testInstantiation
      * @param mixed $filter_params
      */
-	public function testEmptyIteratorResultOnRequestException($filter_params, ApiClientInterface $sut ) : void
+	public function testAllDocumentsEmptyIteratorResultOnRequestException($filter_params, DownloadsApiInterface $sut ) : void
 	{
 
 		$client_stub = $this->prophesize( ClientInterface::class );
@@ -155,13 +192,37 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase
 
 		$sut->setClient($client);
 
-        $this->expectException( RequestExceptionInterface::class );
+        $this->expectException( DownloadsApiExceptionInterface::class );
+        $this->expectException( DownloadsApiRuntimeException::class );
 		$all = $sut->all( $filter_params );
 
-
-        $this->expectException( RequestExceptionInterface::class );
-		$latest = $sut->latest( $filter_params);
 	}
+
+
+
+
+    /**
+     * @dataProvider provideFilterParameters
+     * @depends testInstantiation
+     * @param mixed $filter_params
+     */
+    public function testLatestDocumentsEmptyIteratorResultOnRequestException($filter_params, DownloadsApiInterface $sut ) : void
+    {
+
+        $client_stub = $this->prophesize( ClientInterface::class );
+        $client_stub->sendRequest( Argument::type(RequestInterface::class))
+                    ->willThrow( RequestException::class );
+        $client = $client_stub->reveal();
+
+        $sut->setClient($client);
+
+        $this->expectException( DownloadsApiExceptionInterface::class );
+        $this->expectException( DownloadsApiRuntimeException::class );
+        $latest = $sut->latest( $filter_params);
+    }
+
+
+
 
 
 
@@ -169,7 +230,7 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase
      * @depends testInstantiation
 	 * @dataProvider provideVariousInvalidResonseBodies
 	 */
-	public function testExceptionOnWeirdResponseBody( string $body, ApiClientInterface $sut ) : void
+	public function testAllDocumentsExceptionOnWeirdResponseBody( string $body, DownloadsApiInterface $sut ) : void
 	{
 		$response = new Response( 200, array(), $body );
 
@@ -180,12 +241,34 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase
 
 		$sut->setClient($client);
 
-		$this->expectException( ReponseDecoderException::class );
-		$all = $sut->all();
+        $this->expectException( DownloadsApiUnexpectedValueException::class );
+		$sut->all();
 
-		$this->expectException( ReponseDecoderException::class );
-		$latest = $sut->latest();
 	}
+
+
+
+
+    /**
+     * @depends testInstantiation
+     * @dataProvider provideVariousInvalidResonseBodies
+     */
+    public function testLatestDocumentsExceptionOnWeirdResponseBody( string $body, DownloadsApiInterface $sut ) : void
+    {
+        $response = new Response( 200, array(), $body );
+
+        $client_stub = $this->prophesize( ClientInterface::class );
+        $client_stub->sendRequest( Argument::type(RequestInterface::class))
+                    ->willReturn( $response );
+        $client = $client_stub->reveal();
+
+        $sut->setClient($client);
+
+        $this->expectException( DownloadsApiUnexpectedValueException::class );
+        $sut->latest();
+    }
+
+
 
 
 

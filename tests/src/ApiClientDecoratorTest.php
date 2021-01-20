@@ -1,21 +1,21 @@
 <?php
 namespace tests;
 
-use Germania\DownloadsApiClient\ApiClientDecorator;
-use Germania\DownloadsApiClient\ApiClientInterface;
+use Germania\DownloadsApi\DownloadsApiDecorator;
+use Germania\DownloadsApi\DownloadsApiInterface;
 use Prophecy\PhpUnit\ProphecyTrait;
 
-class ApiClientDecoratorTest extends \PHPUnit\Framework\TestCase
+class DownloadsApiDecoratorTest extends \PHPUnit\Framework\TestCase
 {
     use ProphecyTrait;
 
-    public function testInstantiation() : ApiClientInterface
+    public function testInstantiation() : DownloadsApiInterface
     {
-        $client_mock = $this->prophesize(ApiClientInterface::class);
+        $client_mock = $this->prophesize(DownloadsApiInterface::class);
         $client = $client_mock->reveal();
 
-        $sut = new ApiClientDecorator($client);
-        $this->assertInstanceOf(ApiClientInterface::class, $sut);
+        $sut = new DownloadsApiDecorator($client);
+        $this->assertInstanceOf(DownloadsApiInterface::class, $sut);
 
         return $sut;
     }

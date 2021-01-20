@@ -1,8 +1,8 @@
 <?php
 namespace tests;
 
-use Germania\DownloadsApiClient\Factory;
-use Germania\DownloadsApiClient\FactoryInterface;
+use Germania\DownloadsApi\Factory;
+use Germania\DownloadsApi\FactoryInterface;
 use Psr\Http\Client\ClientInterface;
 use GuzzleHttp\Psr7\Request;
 use Prophecy\PhpUnit\ProphecyTrait;

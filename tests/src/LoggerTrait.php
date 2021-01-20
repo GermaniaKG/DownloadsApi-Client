@@ -1,34 +1,41 @@
 <?php
 namespace tests;
 
+use Psr\Log\LoggerInterface;
+use Psr\Log\LoggerAwareTrait;
+use Laminas\Log\PsrLoggerAdapter;
+
+
 trait LoggerTrait
 {
-
-
-    /**
-     * @var \Psr\Log\LoggerInterface
-     */
-    public $logger;
-
+    use LoggerAwareTrait;
 
     /**
      * @var int
      */
-    public $loglevel = \Laminas\Log\Logger::DEBUG;
+    public $loglevel = \Laminas\Log\Logger::ALERT;
 
 
-    protected function getLogger()
+    /**
+     * @return \Psr\Log\LoggerInterface
+     */
+    protected function getLogger() : LoggerInterface
     {
         if ($this->logger) {
             return $this->logger;
         }
-        $this->logger = $this->createLaminasLogger();
+
+        $this->setLogger($this->createLaminasLogger());
         return $this->logger;
     }
 
-    protected function createLaminasLogger()
+    /**
+     * @return \Laminas\Log\PsrLoggerAdapter
+     */
+    protected function createLaminasLogger() : PsrLoggerAdapter
     {
-        $filter = new \Laminas\Log\Filter\Priority( $this->loglevel );
+        $loglevel = ($GLOBALS['LAMINAS_LOGLEVEL'] ?? $this->loglevel) ?: $this->loglevel;
+        $filter = new \Laminas\Log\Filter\Priority( $loglevel );
 
         $writer = new \Laminas\Log\Writer\Stream('php://output');
         $writer->addFilter($filter);
@@ -39,4 +46,3 @@ trait LoggerTrait
         return new \Laminas\Log\PsrLoggerAdapter($laminasLogLogger);
     }
 }
-

@@ -1,5 +1,5 @@
 <?php
-namespace Germania\DownloadsApiClient;
+namespace Germania\DownloadsApi;
 
 use Psr\Log\LogLevel;
 

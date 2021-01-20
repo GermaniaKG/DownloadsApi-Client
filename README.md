@@ -28,13 +28,13 @@ $ composer require germania-kg/downloadsapi-client
 
 ### Prerequisites
 
-The **ApiClient** requires a PSR-18 *HTTP Client* as well as a *PSR-7 Request* template. While you of course may use your favourite implementations, the Factory class will create both the PSR-18's `Psr\Http\Client\ClientInterface` and PSR-7 `Psr\Http\Message\RequestInterface` instances on the shoulders of Guzzle.
+The **DownloadsApi** requires a PSR-18 *HTTP Client* as well as a *PSR-7 Request* template. While you of course may use your favourite implementations, the Factory class will create both the PSR-18's `Psr\Http\Client\ClientInterface` and PSR-7 `Psr\Http\Message\RequestInterface` instances on the shoulders of Guzzle.
 
 The PSR-7 Request carries the API endpoint and the Authorization header, and the actal API requests will be cloned from this one.
 
 ```php
 <?php
-use Germania\DownloadsApiClient\Factory;
+use Germania\DownloadsApi\Factory;
 
 $api   = "https://api.example.com/"
 $token = "manymanyletters"; 
@@ -53,25 +53,25 @@ $logger = new \Monolog\Logger( ... );
 
 
 
-### The ApiClient
+### The DownloadsApi
 
-The **ApiClient** requires a PSR-18 *HTTP Client* as well as a *PSR-7 Request* template and a *PSR-6 Cache ItemPool*. It optionally accepts a *PSR-3 Logger* and/or PSR-3 *Loglevel names* for both error and success cases.
+The **DownloadsApi** requires a PSR-18 *HTTP Client* as well as a *PSR-7 Request* template and a *PSR-6 Cache ItemPool*. It optionally accepts a *PSR-3 Logger* and/or PSR-3 *Loglevel names* for both error and success cases.
 
 ```php
 <?php
-use Germania\DownloadsApiClient\ApiClient;
+use Germania\DownloadsApi\DownloadsApi;
 
-$client = new ApiClient($client, $request, $cache );
-$client = new ApiClient($client, $request, $cache, $logger );
-$client = new ApiClient($client, $request, $cache, $logger, "alert" );
-$client = new ApiClient($client, $request, $cache, $logger, "error", "info" );
+$client = new DownloadsApi($client, $request, $cache );
+$client = new DownloadsApi($client, $request, $cache, $logger );
+$client = new DownloadsApi($client, $request, $cache, $logger, "alert" );
+$client = new DownloadsApi($client, $request, $cache, $logger, "error", "info" );
 ```
 
 
 
 ### Security considerations: The caching engine
 
-The results are stored in the PSR-6 cache passed to the *ApiClient* constructor, using a *cache key* to look up the results next time. 
+The results are stored in the PSR-6 cache passed to the *DownloadsApi* constructor, using a *cache key* to look up the results next time. 
 
 This *cache key* contains amongst others a fast-to-compute **sha256 hash** of the authorization header. The downside is, your auth tokens are vulnerable to *hash collision* attacks, when two different string produce the same hash. 
 
@@ -87,7 +87,7 @@ Your auth token hopefully has a baked-in lifetime. Once this lifetime is reached
 
 ### Retrieve documents
 
-The **ApiClient** provides two public methods, ***all*** and ***latest***, which return an ***ArrayIterator*** with the documents provided by *Germania's DownloadsAPI*. 
+The **DownloadsApi** provides two public methods, ***all*** and ***latest***, which return an ***ArrayIterator*** with the documents provided by *Germania's DownloadsAPI*. 
 
 The resulting documents list will have been pre-filtered according to the permissions related with the Access token sent along with the *Guzzle Client* request.
 
@@ -176,10 +176,10 @@ $downloads = $downloads_client->all($filters);
 
 ```php
 <?php
-use Germania\DownloadsApiClient\{
-  ApiClientExceptionInterface,
-	ApiClientRuntimeException,
-  ApiClientUnexpectedValueException
+use Germania\DownloadsApi\{
+  DownloadsApiExceptionInterface,
+	DownloadsApiRuntimeException,
+  DownloadsApiUnexpectedValueException
 };
 ```
 
@@ -187,11 +187,11 @@ use Germania\DownloadsApiClient\{
 
 ### Exceptions during request
 
-Just in case the *ApiClient* throws an exception, both the *all* and *latest* methods will return an **empty ArrayIterator**.  The error will be logged to the *PSR-3 Logger* passed to the constructor.
+Just in case the *DownloadsApi* throws an exception, both the *all* and *latest* methods will return an **empty ArrayIterator**.  The error will be logged to the *PSR-3 Logger* passed to the constructor.
 
 ### Unexpected values in response
 
-Whenever the response can't be decoded to a useful array, a  **ApiClientUnexpectedValueException** will be thrown. This class implements `ApiClientExceptionInterface` and extends `\UnexpectedValueException`.  The exception will be logged and bubble up.
+Whenever the response can't be decoded to a useful array, a  **DownloadsApiUnexpectedValueException** will be thrown. This class implements `DownloadsApiExceptionInterface` and extends `\UnexpectedValueException`.  The exception will be logged and bubble up.
 
 
 

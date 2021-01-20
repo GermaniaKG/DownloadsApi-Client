@@ -1,11 +1,12 @@
 <?php
 namespace tests;
 
-use Germania\DownloadsApiClient\{
+use Germania\DownloadsApi\{
     CacheDownloadsApiDecorator,
     Factory,
-    ApiClient,
-    ApiClientInterface
+    DownloadsApi,
+    DownloadsApiInterface,
+    Exceptions\DownloadsApiResponseException,
 };
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Cache\CacheItemInterface;
@@ -56,7 +57,7 @@ class CacheDownloadsApiDecoratorTest extends \PHPUnit\Framework\TestCase
 
     public function testInstantiation() : CacheDownloadsApiDecorator
     {
-        $client_mock = $this->prophesize(ApiClientInterface::class);
+        $client_mock = $this->prophesize(DownloadsApiInterface::class);
         $client_mock->getAuthentication()->willReturn("some-auth-ID");
         $client = $client_mock->reveal();
 
@@ -66,7 +67,7 @@ class CacheDownloadsApiDecoratorTest extends \PHPUnit\Framework\TestCase
         $sut = new CacheDownloadsApiDecorator($client, $cache);
         $sut->setLogger( $this->getLogger());
 
-        $this->assertInstanceOf(ApiClientInterface::class, $sut);
+        $this->assertInstanceOf(DownloadsApiInterface::class, $sut);
 
         return $sut;
     }
@@ -75,7 +76,7 @@ class CacheDownloadsApiDecoratorTest extends \PHPUnit\Framework\TestCase
     /**
      * @depends testInstantiation
      */
-    public function testDefaultCacheLifetimeInterceptors( ApiClientInterface $sut ) : void
+    public function testDefaultCacheLifetimeInterceptors( DownloadsApiInterface $sut ) : void
     {
         $old_ttl = $sut->getDefaultCacheLifetime();
         $new_ttl = 100;
@@ -88,7 +89,7 @@ class CacheDownloadsApiDecoratorTest extends \PHPUnit\Framework\TestCase
     /**
      * @depends testInstantiation
      */
-    public function testCacheItemPoolInterceptors( ApiClientInterface $sut ) : void
+    public function testCacheItemPoolInterceptors( DownloadsApiInterface $sut ) : void
     {
         $cache_mock = $this->prophesize(CacheItemPoolInterface::class);
         $cache = $cache_mock->reveal();
@@ -101,7 +102,7 @@ class CacheDownloadsApiDecoratorTest extends \PHPUnit\Framework\TestCase
     /**
      * @depends testInstantiation
      */
-    public function testMakeCacheKey( ApiClientInterface $sut ) : void
+    public function testMakeCacheKey( DownloadsApiInterface $sut ) : void
     {
         $result = $sut->makeCacheKey("path", ["foo", "bar"]);
         $this->assertIsString($result);
@@ -130,6 +131,80 @@ class CacheDownloadsApiDecoratorTest extends \PHPUnit\Framework\TestCase
      * @depends testInstantiation
      * @param mixed $filter_params
      */
+    public function testAllDocumentsApiCallWithCacheMissAndException($filter_params, CacheDownloadsApiDecorator $sut ) : void
+    {
+        $api_result = array("foo", "bar");
+        $api_result_iterator = new \ArrayIterator($api_result);
+
+
+        $cache_item_stub = $this->prophesize(CacheItemInterface::class);
+        $cache_item_stub->isHit()->willReturn( false );
+        $cache_item_stub->set( Argument::exact($api_result) )->shouldNotBeCalled();
+        $cache_item_stub->expiresAfter( Argument::type("integer") )->shouldNotBeCalled();
+        $cache_item = $cache_item_stub->reveal();
+
+        $cache_stub = $this->prophesize( CacheItemPoolInterface::class );
+        $cache_stub->getItem( Argument::type("string") )->willReturn( $cache_item );
+        $cache_stub->deleteItem( Argument::type("string") )->shouldBeCalled();
+        $cache_stub->save( Argument::any() )->shouldNotBeCalled();
+        $cache = $cache_stub->reveal();
+
+        $decoratee_stub = $this->prophesize(DownloadsApiInterface::class);
+        $decoratee_stub->getAuthentication()->willReturn("auth");
+        $decoratee_stub->request( Argument::any(), Argument::any())->willThrow( DownloadsApiResponseException::class );
+        $decoratee = $decoratee_stub->reveal();
+
+        $sut->setClient($decoratee);
+        $sut->setCacheItemPool($cache);
+
+        $this->expectException(DownloadsApiResponseException::class);
+        $sut->all($filter_params);
+    }
+
+
+    /**
+     * @dataProvider provideFilterParameters
+     * @depends testInstantiation
+     * @param mixed $filter_params
+     */
+    public function testLatestDocumentsApiCallWithCacheMissAndException($filter_params, CacheDownloadsApiDecorator $sut ) : void
+    {
+        $api_result = array("foo", "bar");
+        $api_result_iterator = new \ArrayIterator($api_result);
+
+
+        $cache_item_stub = $this->prophesize(CacheItemInterface::class);
+        $cache_item_stub->isHit()->willReturn( false );
+        $cache_item_stub->set( Argument::exact($api_result) )->shouldNotBeCalled();
+        $cache_item_stub->expiresAfter( Argument::type("integer") )->shouldNotBeCalled();
+        $cache_item = $cache_item_stub->reveal();
+
+        $cache_stub = $this->prophesize( CacheItemPoolInterface::class );
+        $cache_stub->getItem( Argument::type("string") )->willReturn( $cache_item );
+        $cache_stub->deleteItem( Argument::type("string") )->shouldBeCalled();
+        $cache_stub->save( Argument::any() )->shouldNotBeCalled();
+        $cache = $cache_stub->reveal();
+
+        $decoratee_stub = $this->prophesize(DownloadsApiInterface::class);
+        $decoratee_stub->getAuthentication()->willReturn("auth");
+        $decoratee_stub->request( Argument::any(), Argument::any())->willThrow( DownloadsApiResponseException::class );
+        $decoratee = $decoratee_stub->reveal();
+
+        $sut->setClient($decoratee);
+        $sut->setCacheItemPool($cache);
+
+        $this->expectException(DownloadsApiResponseException::class);
+        $sut->latest($filter_params);
+    }
+
+
+
+
+    /**
+     * @dataProvider provideFilterParameters
+     * @depends testInstantiation
+     * @param mixed $filter_params
+     */
     public function testApiCallWithCacheMiss($filter_params, CacheDownloadsApiDecorator $sut ) : void
     {
         $api_result = array("foo", "bar");
@@ -148,9 +223,9 @@ class CacheDownloadsApiDecoratorTest extends \PHPUnit\Framework\TestCase
         $cache_stub->save( Argument::any() )->shouldBeCalled();
         $cache = $cache_stub->reveal();
 
-        $decoratee_stub = $this->prophesize(ApiClientInterface::class);
+        $decoratee_stub = $this->prophesize(DownloadsApiInterface::class);
         $decoratee_stub->getAuthentication()->willReturn("auth");
-        $decoratee_stub->all( Argument::any())->willReturn(  $api_result );
+        $decoratee_stub->request( Argument::any(), Argument::any())->willReturn(  $api_result );
         $decoratee = $decoratee_stub->reveal();
 
         $sut->setClient($decoratee);
@@ -158,7 +233,6 @@ class CacheDownloadsApiDecoratorTest extends \PHPUnit\Framework\TestCase
 
 
         $all = $sut->all($filter_params);
-
         $this->assertIsIterable( $all);
         $this->assertEquals($api_result, $all);
 
@@ -166,6 +240,10 @@ class CacheDownloadsApiDecoratorTest extends \PHPUnit\Framework\TestCase
         $this->assertIsIterable( $latest);
         $this->assertEquals($api_result, $latest);
     }
+
+
+
+
 
 
     /**
@@ -187,7 +265,7 @@ class CacheDownloadsApiDecoratorTest extends \PHPUnit\Framework\TestCase
         $cache_stub->getItem( Argument::type("string") )->willReturn( $cache_item );
         $cache = $cache_stub->reveal();
 
-        $decoratee_stub = $this->prophesize(ApiClientInterface::class);
+        $decoratee_stub = $this->prophesize(DownloadsApiInterface::class);
         $decoratee_stub->getAuthentication()->willReturn("auth");
         $decoratee_stub->all( Argument::any())->willReturn( $api_result);
         $decoratee_stub->latest( Argument::any())->willReturn( $api_result);

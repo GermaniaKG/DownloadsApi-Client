@@ -1,11 +1,10 @@
 <?php
-namespace Germania\DownloadsApiClient;
+namespace Germania\DownloadsApi;
 
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 
-class CacheDownloadsApiDecorator extends ApiClientDecorator
+class CacheDownloadsApiDecorator extends DownloadsApiDecorator
 {
 
 
@@ -37,15 +36,13 @@ class CacheDownloadsApiDecorator extends ApiClientDecorator
 
 
     /**
-     * @param \Germania\DownloadsApiClient\ApiClientInterface  $client  AuthApi client decoratee
+     * @param \Germania\DownloadsApi\DownloadsApiInterface  $client  AuthApi client decoratee
      * @param \Psr\Cache\CacheItemPoolInterface                $cache   PSR-6 Cache
-     * @param \Psr\Log\LoggerInterface|null                   $logger  Optional: PSR-3 Logger
      */
-    public function __construct( ApiClientInterface $client, CacheItemPoolInterface $cache, LoggerInterface $logger = null )
+    public function __construct( DownloadsApiInterface $client, CacheItemPoolInterface $cache )
     {
         parent::__construct( $client );
         $this->setCacheItemPool( $cache );
-        $this->setLogger($logger ?: new NullLogger);
     }
 
 
@@ -58,7 +55,7 @@ class CacheDownloadsApiDecorator extends ApiClientDecorator
      *
      * @return iterable
      */
-    public function __invoke( string $path, array $filters = array() ) : iterable
+    public function request( string $path, array $filters = array() ) : iterable
     {
         $cache_key  = $this->makeCacheKey($path, $filters);
         $cache_item = $this->cache_itempool->getItem( $cache_key );
@@ -77,7 +74,8 @@ class CacheDownloadsApiDecorator extends ApiClientDecorator
         $this->logger->debug("Documents not found or stale, delete cache item.");
         $this->cache_itempool->deleteItem($cache_key);
 
-        $downloads = $this->client->all($filters );
+        // Delegate to decoratee
+        $downloads = $this->client->request($path, $filters );
 
         $cache_item->set( $downloads );
 
@@ -95,6 +93,7 @@ class CacheDownloadsApiDecorator extends ApiClientDecorator
         return $downloads;
     }
 
+
     /**
      * @inheritDoc
      *
@@ -102,7 +101,7 @@ class CacheDownloadsApiDecorator extends ApiClientDecorator
      */
     public function all( array $filters = array() ) : iterable
     {
-        return $this->__invoke("all", $filters);
+        return $this->request("all", $filters);
     }
 
 
@@ -114,7 +113,7 @@ class CacheDownloadsApiDecorator extends ApiClientDecorator
      */
     public function latest( array $filters = array() ) : iterable
     {
-        return $this->__invoke("latest", $filters );
+        return $this->request("latest", $filters );
     }
 
 
