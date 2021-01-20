@@ -1,27 +1,28 @@
 <?php
 namespace tests;
 
-use Germania\DownloadsApiClient\ApiClient;
-use Germania\DownloadsApiClient\ApiClientAbstract;
-use Germania\DownloadsApiClient\ApiClientInterface;
-use Germania\DownloadsApiClient\ApiClientUnexpectedValueException;
-use Germania\DownloadsApiClient\ApiClientRuntimeException;
+use Germania\DownloadsApiClient\{
+    Factory,
+    ApiClient,
+    ApiClientAbstract,
+    ApiClientInterface,
+    ApiClientUnexpectedValueException,
+    ApiClientRuntimeException
+};
 
-use Psr\Http\Client\ClientInterface;
-use Psr\Http\Client\ClientExceptionInterface;
-use Psr\Http\Message\RequestInterface;
+use Psr\Http\{
+    Client\ClientInterface,
+    Client\ClientExceptionInterface,
+    Message\RequestInterface,
+    Message\ResponseInterface,
+};
 
-use Germania\DownloadsApiClient\Factory;
 use Germania\ResponseDecoder\JsonApiResponseDecoder;
 use Germania\ResponseDecoder\ReponseDecoderException;
 
-use GuzzleHttp\Client;
-use Prophecy\Argument;
-use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Psr7\Response;
-use Psr\Cache\CacheItemPoolInterface;
-use Psr\Cache\CacheItemInterface;
-use Psr\Http\Message\ResponseInterface;
+
+use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 
 class ApiClientTest extends \PHPUnit\Framework\TestCase
@@ -29,8 +30,14 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase
 
     use ProphecyTrait;
 
+    /**
+     * @var \Psr\Http\Message\RequestInterface
+     */
     public $request;
-    public $factory;
+
+    /**
+     * @var \Psr\Http\Client\ClientInterface
+     */
     public $client;
 
 
@@ -39,15 +46,15 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase
         $base_uri = $GLOBALS['DOWNLOADS_API'];
         $token = $GLOBALS['AUTH_TOKEN'];
 
-        $this->factory = new Factory;
-        $this->client = $this->factory->createClient();
-        $this->request = $this->factory->createRequest($base_uri, $token);
+        $factory = new Factory;
+        $this->client = $factory->createClient();
+        $this->request = $factory->createRequest($base_uri, $token);
 
     }
 
 
 
-	public function testInstantiation()
+	public function testInstantiation() : ApiClient
 	{
         $client_stub = $this->prophesize(ClientInterface::class);
         $client = $client_stub->reveal();
@@ -55,10 +62,7 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase
         $request_stub = $this->prophesize(RequestInterface::class);
         $request = $request_stub->reveal();
 
-        $cache_stub = $this->prophesize( CacheItemPoolInterface::class );
-        $cache = $cache_stub->reveal();
-
-		$sut = new ApiClient( $client, $request, $cache );
+		$sut = new ApiClient( $client, $request );
 
         $this->assertInstanceOf(ApiClientInterface::class, $sut);
 		$this->assertTrue( is_callable( $sut ));
@@ -70,159 +74,43 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase
     /**
      * @depends testInstantiation
      */
-    public function testResponseDecorderInterceptors( $sut )
+    public function testResponseDecorderInterceptors( ApiClientInterface $sut ) : void
     {
         $res = $sut->setResponseDecoder(new JsonApiResponseDecoder);
         $this->assertInstanceOf(ApiClientAbstract::class, $res);
     }
 
 
-    /**
-     * @depends testInstantiation
-     */
-    public function testDefaultCacheLifetimeInterceptors( $sut )
+    public function testRealApiCall() : void
     {
-        $old_ttl = $sut->getDefaultCacheLifetime();
-        $new_ttl = 100;
+        $sut = new ApiClient( $this->client, $this->request );
 
-        $result = $sut->setDefaultCacheLifetime($new_ttl)->getDefaultCacheLifetime();
-        $this->assertEquals($result, $new_ttl);
-    }
-
-
-    /**
-     * @depends testInstantiation
-     */
-    public function testStashPrecomputeTimeInterceptors( $sut )
-    {
-        $old_ttl = $sut->getStashPrecomputeTime();
-        $new_ttl = 100;
-
-        $result = $sut->setStashPrecomputeTime($new_ttl)->getStashPrecomputeTime();
-        $this->assertEquals($result, $new_ttl);
-    }
-
-
-
-    public function ___testReal()
-    {
-        $cache_item_stub = $this->prophesize(CacheItemInterface::class);
-        $cache_item_stub->isHit()->willReturn( false );
-        $cache_item_stub->set( Argument::type("array") )->shouldBeCalled();
-        $cache_item_stub->expiresAfter( Argument::type("integer") )->shouldBeCalled();
-        $cache_item = $cache_item_stub->reveal();
-
-        $cache_stub = $this->prophesize( CacheItemPoolInterface::class );
-        $cache_stub->getItem( Argument::type("string") )->willReturn( $cache_item );
-        $cache_stub->save( Argument::any() )->shouldBeCalled();
-        $cache = $cache_stub->reveal();
-
-
-
-        $sut = new ApiClient( $this->client, $this->request, $cache );
         $all = $sut->all([
             "product" => "plissee",
             "category" => "montageanleitung"
         ]);
 
-        $this->assertTrue( is_iterable($all));
+        $this->assertIsIterable($all);
 
         $latest = $sut->latest([  "product" => "plissee" ]);
-        $this->assertTrue( is_iterable($latest));
-    }
+        $this->assertIsIterable( $latest);
 
-
-
-    public function testSimpleWithNothingInCache()
-    {
-
-        $response = new Response(200, array(), json_encode(array(
-            'data' => array()
-        )));
-
-
-        $client_stub = $this->prophesize( ClientInterface::class );
-        $client_stub->sendRequest( Argument::any() )->willReturn( $response );
-        $client = $client_stub->reveal();
-
-        $cache_item_stub = $this->prophesize(CacheItemInterface::class);
-        $cache_item_stub->isHit()->willReturn( false );
-        $cache_item_stub->set( Argument::type("array") )->shouldBeCalled();
-        $cache_item_stub->expiresAfter( Argument::type("integer") )->shouldBeCalled();
-        $cache_item = $cache_item_stub->reveal();
-
-        $cache_stub = $this->prophesize( CacheItemPoolInterface::class );
-        $cache_stub->getItem( Argument::type("string") )->willReturn( $cache_item );
-        $cache_stub->save( Argument::any() )->shouldBeCalled();
-        $cache = $cache_stub->reveal();
-
-        $sut = new ApiClient( $client, $this->request, $cache );
-        $all = $sut->all([
-            "product" => "plissee",
-            "category" => "montageanleitung"
-        ]);
-
-        $this->assertInstanceOf( \Traversable::class, $all);
-
-        $latest = $sut->latest([  "product" => "plissee" ]);
-        $this->assertInstanceOf( \Traversable::class, $latest);
     }
 
 
 
 
-	public function testSimpleWithCacheHit()
+
+
+
+
+	public function testEmptyIteratorResultOnRequestException() : void
 	{
-		$cache_item_stub = $this->prophesize(CacheItemInterface::class);
-		$cache_item_stub->isHit()->willReturn( true );
-		$cache_item_stub->get( )->willReturn( array("foo", "bar"));
-		$cache_item = $cache_item_stub->reveal();
-
-		$cache_stub = $this->prophesize( CacheItemPoolInterface::class );
-		$cache_stub->getItem( Argument::type("string") )->willReturn( $cache_item );
-		$cache = $cache_stub->reveal();
-
-		$sut = new ApiClient( $this->client, $this->request, $cache );
-		$all = $sut->all([
-			"product" => "plissee",
-			"category" => "montageanleitung"
-		]);
-		$this->assertInstanceOf( \Traversable::class, $all);
-
-		$latest = $sut->latest([  "product" => "plissee" ]);
-		$this->assertInstanceOf( \Traversable::class, $latest);
-	}
-
-
-	public function provideMalformedClientHeaders()
-	{
-		return array(
-			[ array("foo" => "bar") ],
-			[ false ],
-			[ null ]
-		);
-	}
-
-
-	public function testEmptyIteratorResultOnRequestException()
-	{
-		$exception = $this->prophesize( ClientExceptionInterface::class );
-
 		$client_stub = $this->prophesize( ClientInterface::class );
-		$client_stub->sendRequest( Argument::type(RequestInterface::class))->willThrow( $exception->reveal() );
+		$client_stub->sendRequest( Argument::type(RequestInterface::class))->willThrow( ClientExceptionInterface::class );
 		$client = $client_stub->reveal();
 
-
-		$cache_item_stub = $this->prophesize(CacheItemInterface::class);
-		$cache_item_stub->isHit()->willReturn( false );
-		$cache_item = $cache_item_stub->reveal();
-
-		$cache_stub = $this->prophesize( CacheItemPoolInterface::class );
-		$cache_stub->getItem( Argument::type("string") )->willReturn( $cache_item );
-		$cache = $cache_stub->reveal();
-
-		$sut = new ApiClient( $client, $this->request, $cache);
-
+		$sut = new ApiClient( $client, $this->request);
 		$all = $sut->all([
 			"product" => "plissee",
 			"category" => "montageanleitung"
@@ -236,10 +124,11 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase
 	}
 
 
+
 	/**
 	 * @dataProvider provideVariousInvalidResonseBodies
 	 */
-	public function testExceptionOnWeirdResponseBody( $body )
+	public function testExceptionOnWeirdResponseBody( string $body ) : void
 	{
 		$response = new Response( 200, array(), $body );
 
@@ -247,15 +136,7 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase
 		$client_stub->sendRequest( Argument::type(RequestInterface::class))->willReturn( $response );
 		$client = $client_stub->reveal();
 
-		$cache_item_stub = $this->prophesize(CacheItemInterface::class);
-		$cache_item_stub->isHit()->willReturn( false );
-		$cache_item = $cache_item_stub->reveal();
-
-		$cache_stub = $this->prophesize( CacheItemPoolInterface::class );
-		$cache_stub->getItem( Argument::type("string") )->willReturn( $cache_item );
-		$cache = $cache_stub->reveal();
-
-		$sut = new ApiClient( $client, $this->request, $cache );
+		$sut = new ApiClient( $client, $this->request);
 
 		$this->expectException( ReponseDecoderException::class );
 		$all = $sut->all();
@@ -265,7 +146,11 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase
 	}
 
 
-	public function provideVariousInvalidResonseBodies()
+
+    /**
+     * @return string[]
+     */
+	public function provideVariousInvalidResonseBodies() : array
 	{
 		return array(
 			[ "hello!" ],
