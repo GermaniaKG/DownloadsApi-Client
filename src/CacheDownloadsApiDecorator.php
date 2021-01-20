@@ -60,23 +60,18 @@ class CacheDownloadsApiDecorator extends ApiClientDecorator
      */
     public function __invoke( string $path, array $filters = array() ) : iterable
     {
-        $start_time = microtime("float");
-
-        $auth = $this->getAuthentication();
-        $cache_key  = $this->makeCacheKey($path, $auth, $filters);
+        $cache_key  = $this->makeCacheKey($path, $filters);
         $cache_item = $this->cache_itempool->getItem( $cache_key );
-
 
         if ($cache_item->isHit()):
             $downloads = $cache_item->get();
 
             $this->logger->log( $this->success_loglevel, "Documents list found in cache", [
                 'path' => $path,
-                'count' => count($downloads),
-                'time' => ((microtime("float") - $start_time) * 1000) . "ms"
+                'count' => count($downloads)
             ]);
 
-            return new \ArrayIterator( $downloads );
+            return $downloads;
         endif;
 
         $this->logger->debug("Documents not found or stale, delete cache item.");
@@ -94,11 +89,10 @@ class CacheDownloadsApiDecorator extends ApiClientDecorator
         $this->logger->log( $this->success_loglevel, "Documents list stored in cache", [
             'path' => $path,
             'count' => count($downloads),
-            'lifetime' => $lifetime,
-            'time' => ((microtime("float") - $start_time) * 1000) . "ms"
+            'lifetime' => $lifetime
         ]);
 
-        return new \ArrayIterator( $downloads );
+        return $downloads;
     }
 
     /**
@@ -162,15 +156,14 @@ class CacheDownloadsApiDecorator extends ApiClientDecorator
      * Create a PSR-6 compliant cache key (hex characters).
      *
      * @param  string $path
-     * @param  string $auth_header
      * @param  array $filters
      * @return string
      */
-    public function makeCacheKey(string $path, string $auth_header, array $filters) : string
+    public function makeCacheKey(string $path, array $filters) : string
     {
         $filters_hash = md5(serialize($filters));
-
-        return hash($this->cache_key_hash_algo, $path . $auth_header . $filters_hash, false );
+        $auth = $this->getAuthentication();
+        return hash($this->cache_key_hash_algo, $path . $auth . $filters_hash, false );
     }
 
 

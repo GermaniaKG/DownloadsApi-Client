@@ -9,10 +9,12 @@ use Germania\DownloadsApiClient\{
 };
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Cache\CacheItemInterface;
+use Psr\Log\LoggerInterface;
 
 use Psr\Http\{
     Client\ClientInterface as Psr18Client,
     Client\ClientExceptionInterface,
+    Client\RequestExceptionInterface,
     Message\RequestInterface,
     Message\ResponseInterface,
 };
@@ -20,10 +22,12 @@ use Psr\Http\{
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Argument;
 use GuzzleHttp\Psr7\Response;
+use GuzzleHttp\Exception\RequestException;
 
 class CacheDownloadsApiDecoratorTest extends \PHPUnit\Framework\TestCase
 {
-    use ProphecyTrait;
+    use ProphecyTrait,
+        LoggerTrait;
 
 
     /**
@@ -53,12 +57,15 @@ class CacheDownloadsApiDecoratorTest extends \PHPUnit\Framework\TestCase
     public function testInstantiation() : CacheDownloadsApiDecorator
     {
         $client_mock = $this->prophesize(ApiClientInterface::class);
+        $client_mock->getAuthentication()->willReturn("some-auth-ID");
         $client = $client_mock->reveal();
 
         $cache_mock = $this->prophesize(CacheItemPoolInterface::class);
         $cache = $cache_mock->reveal();
 
         $sut = new CacheDownloadsApiDecorator($client, $cache);
+        $sut->setLogger( $this->getLogger());
+
         $this->assertInstanceOf(ApiClientInterface::class, $sut);
 
         return $sut;
@@ -96,22 +103,42 @@ class CacheDownloadsApiDecoratorTest extends \PHPUnit\Framework\TestCase
      */
     public function testMakeCacheKey( ApiClientInterface $sut ) : void
     {
-        $result = $sut->makeCacheKey("path", "auth", ["foo", "bar"]);
+        $result = $sut->makeCacheKey("path", ["foo", "bar"]);
         $this->assertIsString($result);
     }
 
 
 
 
+    /**
+     * Data provider for API test calls
+     *
+     * @return array[]
+     */
+    public function provideFilterParameters() : array
+    {
+        return array(
+            [ array("product" => "plissee", "category" => "montageanleitung") ],
+        );
+    }
+
+
+
 
     /**
+     * @dataProvider provideFilterParameters
      * @depends testInstantiation
+     * @param mixed $filter_params
      */
-    public function __testRealApiCall( ApiClientInterface $sut ) : void
+    public function testApiCallWithCacheMiss($filter_params, CacheDownloadsApiDecorator $sut ) : void
     {
+        $api_result = array("foo", "bar");
+        $api_result_iterator = new \ArrayIterator($api_result);
+
+
         $cache_item_stub = $this->prophesize(CacheItemInterface::class);
         $cache_item_stub->isHit()->willReturn( false );
-        $cache_item_stub->set( Argument::any() )->shouldBeCalled();
+        $cache_item_stub->set( Argument::exact($api_result) )->shouldBeCalled();
         $cache_item_stub->expiresAfter( Argument::type("integer") )->shouldBeCalled();
         $cache_item = $cache_item_stub->reveal();
 
@@ -121,34 +148,39 @@ class CacheDownloadsApiDecoratorTest extends \PHPUnit\Framework\TestCase
         $cache_stub->save( Argument::any() )->shouldBeCalled();
         $cache = $cache_stub->reveal();
 
+        $decoratee_stub = $this->prophesize(ApiClientInterface::class);
+        $decoratee_stub->getAuthentication()->willReturn("auth");
+        $decoratee_stub->all( Argument::any())->willReturn(  $api_result );
+        $decoratee = $decoratee_stub->reveal();
 
-        $client = new ApiClient( $this->client, $this->request);
-        $sut->setClient($client);
+        $sut->setClient($decoratee);
         $sut->setCacheItemPool($cache);
 
-        $all = $sut->all([
-            "product" => "plissee",
-            "category" => "montageanleitung"
-        ]);
+
+        $all = $sut->all($filter_params);
 
         $this->assertIsIterable( $all);
+        $this->assertEquals($api_result, $all);
 
-        $latest = $sut->latest([  "product" => "plissee" ]);
+        $latest = $sut->latest($filter_params);
         $this->assertIsIterable( $latest);
+        $this->assertEquals($api_result, $latest);
     }
 
 
-
-
-
     /**
+     * @dataProvider provideFilterParameters
      * @depends testInstantiation
+     * @param mixed $filter_params
      */
-    public function testSimpleWithCacheHit( CacheDownloadsApiDecorator $sut ) : void
+    public function testApiCallWithCacheHit( $filter_params, CacheDownloadsApiDecorator $sut ) : void
     {
+        $api_result = array("foo", "bar");
+        $api_result_iterator = new \ArrayIterator($api_result);
+
         $cache_item_stub = $this->prophesize(CacheItemInterface::class);
         $cache_item_stub->isHit()->willReturn( true );
-        $cache_item_stub->get( )->willReturn( array("foo", "bar"));
+        $cache_item_stub->get( )->willReturn( $api_result );
         $cache_item = $cache_item_stub->reveal();
 
         $cache_stub = $this->prophesize( CacheItemPoolInterface::class );
@@ -157,104 +189,20 @@ class CacheDownloadsApiDecoratorTest extends \PHPUnit\Framework\TestCase
 
         $decoratee_stub = $this->prophesize(ApiClientInterface::class);
         $decoratee_stub->getAuthentication()->willReturn("auth");
-        $decoratee_stub->all( Argument::any())->willReturn( array() );
+        $decoratee_stub->all( Argument::any())->willReturn( $api_result);
+        $decoratee_stub->latest( Argument::any())->willReturn( $api_result);
         $decoratee = $decoratee_stub->reveal();
 
         $sut->setClient($decoratee);
         $sut->setCacheItemPool($cache);
 
-        $all = $sut->all([
-            "product" => "plissee",
-            "category" => "montageanleitung"
-        ]);
-        $this->assertInstanceOf( \Traversable::class, $all);
+        $all = $sut->all( $filter_params );
+        $this->assertEquals($api_result, $all);
+        $this->assertIsIterable( $all);
 
-        $latest = $sut->latest([  "product" => "plissee" ]);
-        $this->assertInstanceOf( \Traversable::class, $latest);
-    }
-
-
-    /**
-     * @depends testInstantiation
-     */
-    public function testSimpleWithNothingInCache(CacheDownloadsApiDecorator $sut ) : void
-    {
-
-        $response = new Response(200, array(), json_encode(array(
-            'data' => array()
-        )));
-
-        $cache_item_stub = $this->prophesize(CacheItemInterface::class);
-        $cache_item_stub->isHit()->willReturn( false );
-        $cache_item_stub->set( Argument::any() )->shouldBeCalled();
-        $cache_item_stub->expiresAfter( Argument::type("integer") )->shouldBeCalled();
-        $cache_item = $cache_item_stub->reveal();
-
-        $cache_stub = $this->prophesize( CacheItemPoolInterface::class );
-        $cache_stub->getItem( Argument::type("string") )->willReturn( $cache_item );
-        $cache_stub->deleteItem( Argument::type("string") )->shouldBeCalled();
-        $cache_stub->save( Argument::any() )->shouldBeCalled();
-        $cache = $cache_stub->reveal();
-
-        $decoratee_stub = $this->prophesize(ApiClientInterface::class);
-        $decoratee_stub->getAuthentication()->willReturn("auth");
-        $decoratee_stub->all( Argument::any())->willReturn( array() );
-        $decoratee = $decoratee_stub->reveal();
-
-        $sut->setClient($decoratee);
-        $sut->setCacheItemPool($cache);
-
-
-        $all = $sut->all([
-            "product" => "plissee",
-            "category" => "montageanleitung"
-        ]);
-
-        $this->assertInstanceOf( \Traversable::class, $all);
-
-        $latest = $sut->latest([  "product" => "plissee" ]);
-        $this->assertInstanceOf( \Traversable::class, $latest);
-    }
-
-
-
-    /**
-     * @depends testInstantiation
-     */
-    public function testEmptyIteratorResultOnRequestException(CacheDownloadsApiDecorator $sut ) : void
-    {
-
-        $cache_item_stub = $this->prophesize(CacheItemInterface::class);
-        $cache_item_stub->isHit()->willReturn( false );
-        $cache_item = $cache_item_stub->reveal();
-
-        $cache_stub = $this->prophesize( CacheItemPoolInterface::class );
-        $cache_stub->getItem( Argument::type("string") )->willReturn( $cache_item );
-        $cache_stub->deleteItem( Argument::type("string") )->shouldBeCalled( );
-        $cache_stub->save( Argument::type(CacheItemInterface::class) )->shouldBeCalled( );
-        $cache = $cache_stub->reveal();
-
-        $http_client_stub = $this->prophesize( Psr18Client::class );
-        // $http_client_stub->sendRequest( Argument::type(RequestInterface::class))
-        //                  ->shouldBeCalled()
-        //                  ->willThrow( ClientExceptionInterface::class );
-        $http_client = $http_client_stub->reveal();
-
-
-        $decoratee = new ApiClient( $http_client, $this->request);
-        $sut->setClient($decoratee);
-        $sut->setCacheItemPool($cache);
-
-        $all = $sut->all([
-            "product" => "plissee",
-            "category" => "montageanleitung"
-        ]);
-        $this->assertInstanceOf( \Traversable::class, $all);
-        $this->assertEquals( 0, count($all));
-
-        $latest = $sut->latest([  "product" => "plissee" ]);
-        $this->assertInstanceOf( \Traversable::class, $latest);
-        $this->assertEquals( 0, count($latest));
+        $latest = $sut->latest( $filter_params );
+        $this->assertEquals($api_result, $latest);
+        $this->assertIsIterable( $latest);
     }
 
 

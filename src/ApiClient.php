@@ -6,6 +6,7 @@ use Germania\JsonDecoder\JsonDecoder;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
@@ -41,7 +42,7 @@ class ApiClient extends ApiClientAbstract
 	public function __construct(ClientInterface $client, RequestInterface $request, LoggerInterface $logger = null )
 	{
 		$this->setClient( $client );
-		$this->request = $request;
+		$this->setRequest( $request );
         $this->setLogger( $logger ?: new NullLogger);
         $this->setResponseDecoder( new JsonApiResponseDecoder );
 	}
@@ -77,44 +78,75 @@ class ApiClient extends ApiClientAbstract
 
             $new_request = $this->request->withUri( $new_uri );
 			$response = $this->client->sendRequest( $new_request);
-		}
-
-		catch (\Throwable $e) {
-			$msg = sprintf("DocumentsApi: %s", $e->getMessage());
-			$this->logger->log( $this->error_loglevel, $msg, [
-				'exception' => get_class($e),
-                'location' => sprintf("%s:%s", $e->getFile(), $e->getLine())
-			]);
-			// Shortcut: empty result
-			return new \ArrayIterator( array() );
-		}
 
 
-		// ---------------------------------------------------
-		// Response validation and decoding
-		// ---------------------------------------------------
 
-		try {
+            // Response validation
+            switch($response->getStatusCode()):
+                case "200":
+                    // noop
+                    break;
+
+                default:
+                    $error = $this->getErrorResponseInformation( $response );
+                    $msg = sprintf("Response ended up with status '%s'. %s: %s", $error['status'], $error['title'], $error['detail']);
+                    throw new ApiClientRuntimeException($msg, $error['status']);
+                    break;
+            endswitch;
+
+            // Response decoding
             $downloads = $this->getResponseDecoder()->getResourceCollection($response);
-		}
-		catch (\Throwable $e) {
-            $msg = sprintf("DocumentsApi: %s", $e->getMessage());
-            $this->logger->log( $this->error_loglevel, $msg, [
-                'exception' => get_class($e),
-                'location' => sprintf("%s:%s", $e->getFile(), $e->getLine())
+
+            $this->logger->log( $this->success_loglevel, "Retrieved documents list", [
+                'path' => $path,
+                'count' => count($downloads),
+                'time' => ((microtime("float") - $start_time) * 1000) . "ms"
             ]);
-			throw $e;
+
+            return $downloads;
+
 		}
 
+		catch (\Throwable $e) {
+            $this->handleException( $e );
+            throw $e;
+		}
 
-		$this->logger->log( $this->success_loglevel, "Documents list stored in cache", [
-			'path' => $path,
-			'count' => count($downloads),
-			'time' => ((microtime("float") - $start_time) * 1000) . "ms"
-		]);
-
-		return new \ArrayIterator( $downloads );
 	}
+
+
+    protected function getErrorResponseInformation( ResponseInterface $response ) : array
+    {
+        $response_body = $response->getBody()->__toString();
+
+        $decoded = json_decode($response_body, (bool) "associative");
+        $errors = $decoded['errors'] ?? array();
+        $error = array_shift($errors) ?: array();
+
+        return $error;
+    }
+
+
+
+    /**
+     * Sends exception or error to logger
+     * @param  \Throwable $e
+     * @return void
+     */
+    protected function handleException( \Throwable $e) : void
+    {
+        $location = sprintf("%s:%s", $e->getFile(), $e->getLine());
+        $location = str_replace(getcwd() . "/", "", $location);
+
+        $msg = sprintf("DocumentsApi caught exception: %s", $e->getMessage());
+        $this->logger->log( $this->error_loglevel, $msg, [
+            'exception' => get_class($e),
+            'code' => $e->getCode(),
+            'location' => $location
+        ]);
+    }
+
+
 
 
     /**
@@ -132,11 +164,23 @@ class ApiClient extends ApiClientAbstract
 	 *
 	 * @param ClientInterface $client
 	 */
-	protected function setClient( ClientInterface $client )
+	public function setClient( ClientInterface $client )
 	{
 		$this->client = $client;
 		return $this;
 	}
+
+
+    /**
+     * Sets the PSR-7 Request to work with
+     *
+     * @param Psr\Http\Message\RequestInterface $request
+     */
+    public function setRequest( RequestInterface $request )
+    {
+        $this->request = $request;
+        return $this;
+    }
 
 
 

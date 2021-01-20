@@ -10,9 +10,11 @@ use Germania\DownloadsApiClient\{
     ApiClientRuntimeException
 };
 
+
 use Psr\Http\{
     Client\ClientInterface,
     Client\ClientExceptionInterface,
+    Client\RequestExceptionInterface,
     Message\RequestInterface,
     Message\ResponseInterface,
 };
@@ -20,6 +22,7 @@ use Psr\Http\{
 use Germania\ResponseDecoder\JsonApiResponseDecoder;
 use Germania\ResponseDecoder\ReponseDecoderException;
 
+use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\Response;
 
 use Prophecy\Argument;
@@ -28,7 +31,8 @@ use Prophecy\PhpUnit\ProphecyTrait;
 class ApiClientTest extends \PHPUnit\Framework\TestCase
 {
 
-    use ProphecyTrait;
+    use ProphecyTrait,
+        LoggerTrait;
 
     /**
      * @var \Psr\Http\Message\RequestInterface
@@ -56,16 +60,11 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase
 
 	public function testInstantiation() : ApiClient
 	{
-        $client_stub = $this->prophesize(ClientInterface::class);
-        $client = $client_stub->reveal();
-
-        $request_stub = $this->prophesize(RequestInterface::class);
-        $request = $request_stub->reveal();
-
-		$sut = new ApiClient( $client, $request );
+		$sut = new ApiClient( $this->client, $this->request );
+        $sut->setLogger( $this->getLogger());
 
         $this->assertInstanceOf(ApiClientInterface::class, $sut);
-		$this->assertTrue( is_callable( $sut ));
+		$this->assertIsCallable( $sut );
 
         return $sut;
 	}
@@ -81,18 +80,35 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase
     }
 
 
-    public function testRealApiCall() : void
+
+
+    /**
+     * Data provider for API test calls
+     *
+     * @return array[]
+     */
+    public function provideFilterParameters() : array
     {
-        $sut = new ApiClient( $this->client, $this->request );
+        return array(
+            [ array("product" => "plissee", "category" => "montageanleitung") ],
+        );
+    }
 
-        $all = $sut->all([
-            "product" => "plissee",
-            "category" => "montageanleitung"
-        ]);
 
+
+
+
+    /**
+     * @dataProvider provideFilterParameters
+     * @depends testInstantiation
+     * @param mixed $filter_params
+     */
+    public function testRealApiCall($filter_params, ApiClientInterface $sut ) : void
+    {
+        $all = $sut->all($filter_params);
         $this->assertIsIterable($all);
 
-        $latest = $sut->latest([  "product" => "plissee" ]);
+        $latest = $sut->latest($filter_params);
         $this->assertIsIterable( $latest);
 
     }
@@ -100,49 +116,75 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase
 
 
 
+    /**
+     * @dataProvider provideFilterParameters
+     * @depends testInstantiation
+     * @param mixed $filter_params
+     */
+    public function testInvalidAuthentication( $filter_params, ApiClientInterface $sut ) : void
+    {
+        $base_uri      = $GLOBALS['DOWNLOADS_API'];
+        $invalid_token ="invalid";
+
+        $factory = new Factory;
+        $request = $factory->createRequest($base_uri, $invalid_token);
+
+        $sut->setRequest( $request );
+
+        $this->expectException( ApiClientRuntimeException::class );
+        $all = $sut->all( $filter_params);
+
+        $this->expectException( ApiClientRuntimeException::class );
+        $latest = $sut->latest($filter_params);
+    }
 
 
 
-
-	public function testEmptyIteratorResultOnRequestException() : void
+    /**
+     * @dataProvider provideFilterParameters
+     * @depends testInstantiation
+     * @param mixed $filter_params
+     */
+	public function testEmptyIteratorResultOnRequestException($filter_params, ApiClientInterface $sut ) : void
 	{
+
 		$client_stub = $this->prophesize( ClientInterface::class );
-		$client_stub->sendRequest( Argument::type(RequestInterface::class))->willThrow( ClientExceptionInterface::class );
+		$client_stub->sendRequest( Argument::type(RequestInterface::class))
+                    ->willThrow( RequestException::class );
 		$client = $client_stub->reveal();
 
-		$sut = new ApiClient( $client, $this->request);
-		$all = $sut->all([
-			"product" => "plissee",
-			"category" => "montageanleitung"
-		]);
-		$this->assertInstanceOf( \Traversable::class, $all);
-		$this->assertEquals( 0, count($all));
+		$sut->setClient($client);
 
-		$latest = $sut->latest([  "product" => "plissee" ]);
-		$this->assertInstanceOf( \Traversable::class, $latest);
-		$this->assertEquals( 0, count($latest));
+        $this->expectException( RequestExceptionInterface::class );
+		$all = $sut->all( $filter_params );
+
+
+        $this->expectException( RequestExceptionInterface::class );
+		$latest = $sut->latest( $filter_params);
 	}
 
 
 
 	/**
+     * @depends testInstantiation
 	 * @dataProvider provideVariousInvalidResonseBodies
 	 */
-	public function testExceptionOnWeirdResponseBody( string $body ) : void
+	public function testExceptionOnWeirdResponseBody( string $body, ApiClientInterface $sut ) : void
 	{
 		$response = new Response( 200, array(), $body );
 
 		$client_stub = $this->prophesize( ClientInterface::class );
-		$client_stub->sendRequest( Argument::type(RequestInterface::class))->willReturn( $response );
-		$client = $client_stub->reveal();
+		$client_stub->sendRequest( Argument::type(RequestInterface::class))
+                    ->willReturn( $response );
+        $client = $client_stub->reveal();
 
-		$sut = new ApiClient( $client, $this->request);
+		$sut->setClient($client);
 
 		$this->expectException( ReponseDecoderException::class );
 		$all = $sut->all();
 
 		$this->expectException( ReponseDecoderException::class );
-		$latest = $sut->latest([  "product" => "plissee" ]);
+		$latest = $sut->latest();
 	}
 
 
