@@ -22,6 +22,7 @@ use Psr\Http\{
 
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Argument;
+use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Exception\RequestException;
 
@@ -31,10 +32,6 @@ class CacheDownloadsApiDecoratorTest extends \PHPUnit\Framework\TestCase
         LoggerTrait;
 
 
-    /**
-     * @var \Psr\Http\Message\RequestInterface
-     */
-    public $request;
 
     /**
      * @var \Psr\Http\Client\ClientInterface
@@ -44,13 +41,7 @@ class CacheDownloadsApiDecoratorTest extends \PHPUnit\Framework\TestCase
 
     public function setUp() : void
     {
-        $base_uri = $GLOBALS['DOWNLOADS_API'];
-        $token = $GLOBALS['AUTH_TOKEN'];
-
-        $factory = new Factory;
-        $this->client = $factory->createClient();
-        $this->request = $factory->createRequest($base_uri, $token);
-
+        $this->client = new GuzzleClient;
     }
 
 
@@ -76,7 +67,7 @@ class CacheDownloadsApiDecoratorTest extends \PHPUnit\Framework\TestCase
     /**
      * @depends testInstantiation
      */
-    public function testDefaultCacheLifetimeInterceptors( DownloadsApiInterface $sut ) : void
+    public function testCacheLifetimeInterceptors( DownloadsApiInterface $sut ) : void
     {
         $old_ttl = $sut->getCacheLifetime();
         $new_ttl = 100;
@@ -154,7 +145,7 @@ class CacheDownloadsApiDecoratorTest extends \PHPUnit\Framework\TestCase
         $decoratee_stub->request( Argument::any(), Argument::any())->willThrow( DownloadsApiResponseException::class );
         $decoratee = $decoratee_stub->reveal();
 
-        $sut->setClient($decoratee);
+        $sut->decorate($decoratee);
         $sut->setCacheItemPool($cache);
 
         $this->expectException(DownloadsApiResponseException::class);
@@ -190,7 +181,7 @@ class CacheDownloadsApiDecoratorTest extends \PHPUnit\Framework\TestCase
         $decoratee_stub->request( Argument::any(), Argument::any())->willThrow( DownloadsApiResponseException::class );
         $decoratee = $decoratee_stub->reveal();
 
-        $sut->setClient($decoratee);
+        $sut->decorate($decoratee);
         $sut->setCacheItemPool($cache);
 
         $this->expectException(DownloadsApiResponseException::class);
@@ -228,7 +219,7 @@ class CacheDownloadsApiDecoratorTest extends \PHPUnit\Framework\TestCase
         $decoratee_stub->request( Argument::any(), Argument::any())->willReturn(  $api_result );
         $decoratee = $decoratee_stub->reveal();
 
-        $sut->setClient($decoratee);
+        $sut->decorate($decoratee);
         $sut->setCacheItemPool($cache);
 
 
@@ -271,7 +262,7 @@ class CacheDownloadsApiDecoratorTest extends \PHPUnit\Framework\TestCase
         $decoratee_stub->latest( Argument::any())->willReturn( $api_result);
         $decoratee = $decoratee_stub->reveal();
 
-        $sut->setClient($decoratee);
+        $sut->decorate($decoratee);
         $sut->setCacheItemPool($cache);
 
         $all = $sut->all( $filter_params );

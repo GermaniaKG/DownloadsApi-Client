@@ -25,9 +25,8 @@
   </testsuites>
 
 	<php>
-		<var name="LAMINAS_LOGLEVEL" value="4"/>
 		<var name="AUTH_TOKEN" value="manymanyletters" />
-		<var name="DOWNLOADS_API" value="https://downloads.example.com" />
+		<var name="LAMINAS_LOGLEVEL" value="4"/>
 	</php>
 
   <logging>

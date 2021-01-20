@@ -21,7 +21,8 @@ class DownloadsApiDecorator extends DownloadsApiAbstract
      */
     public function __construct( DownloadsApiInterface $client )
     {
-        $this->setClient( $client );
+        parent::__construct();
+        $this->decorate( $client );
     }
 
 
@@ -30,19 +31,10 @@ class DownloadsApiDecorator extends DownloadsApiAbstract
      *
      * @param \Germania\DownloadsApi\DownloadsApiInterface $client DownloadsApi client
      */
-    public function setClient( DownloadsApiInterface $client ) : self
+    public function decorate( DownloadsApiInterface $client ) : self
     {
         $this->client = $client;
         return $this;
-    }
-
-
-    /**
-     * @inheritDoc
-     */
-    public function getAuthentication() : string
-    {
-        return $this->client->getAuthentication();
     }
 
 
@@ -77,5 +69,23 @@ class DownloadsApiDecorator extends DownloadsApiAbstract
         return $this->client->latest($filters );
     }
 
+
+    /**
+     * @inheritDoc
+     */
+    public function getAuthentication() : string
+    {
+        return $this->client->getAuthentication();
+    }
+
+
+    /**
+     * @inheritDoc
+     */
+    public function setAuthentication( string $auth_token ) : self
+    {
+        $this->client->setAuthentication( $auth_token );
+        return $this;
+    }
 
 }

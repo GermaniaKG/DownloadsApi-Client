@@ -17,6 +17,7 @@ use Psr\Http\{
     Client\ClientInterface,
     Client\ClientExceptionInterface,
     Client\RequestExceptionInterface,
+    Message\RequestFactoryInterface,
     Message\RequestInterface,
     Message\ResponseInterface,
 };
@@ -24,8 +25,11 @@ use Psr\Http\{
 use Germania\ResponseDecoder\JsonApiResponseDecoder;
 use Germania\ResponseDecoder\ReponseDecoderException;
 
+use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\Response;
+
+use Nyholm\Psr7\Factory\Psr17Factory;
 
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
@@ -37,9 +41,9 @@ class DownloadsApiTest extends \PHPUnit\Framework\TestCase
         LoggerTrait;
 
     /**
-     * @var \Psr\Http\Message\RequestInterface
+     * @var \Psr\Http\Message\RequestFactoryInterface
      */
-    public $request;
+    public $request_factory;
 
     /**
      * @var \Psr\Http\Client\ClientInterface
@@ -49,13 +53,8 @@ class DownloadsApiTest extends \PHPUnit\Framework\TestCase
 
     public function setUp() : void
     {
-        $base_uri = $GLOBALS['DOWNLOADS_API'];
-        $token = $GLOBALS['AUTH_TOKEN'];
-
-        $factory = new Factory;
-        $this->client = $factory->createClient();
-        $this->request = $factory->createRequest($base_uri, $token);
-
+        $this->client = new GuzzleClient;
+        $this->request_factory = new Psr17Factory;
     }
 
 
@@ -67,7 +66,7 @@ class DownloadsApiTest extends \PHPUnit\Framework\TestCase
      */
 	public function testInstantiation() : DownloadsApi
 	{
-		$sut = new DownloadsApi( $this->client, $this->request );
+		$sut = new DownloadsApi( $this->client, $this->request_factory, $GLOBALS['AUTH_TOKEN'] );
         $sut->setLogger( $this->getLogger());
 
         $this->assertInstanceOf(DownloadsApiInterface::class, $sut);
@@ -76,9 +75,21 @@ class DownloadsApiTest extends \PHPUnit\Framework\TestCase
 	}
 
 
+    public function testErrorLevelInterceptors() : void
+    {
+        $sut = new DownloadsApi( $this->client, $this->request_factory, $GLOBALS['AUTH_TOKEN'] );
+
+        $res = $sut->setErrorLoglevel(\Psr\Log\LogLevel::DEBUG);
+        $this->assertInstanceOf(DownloadsApiAbstract::class, $res);
+
+        $res = $sut->setSuccessLoglevel(\Psr\Log\LogLevel::DEBUG);
+        $this->assertInstanceOf(DownloadsApiAbstract::class, $res);
+    }
+
+
     public function testResponseDecorderInterceptors() : void
     {
-        $sut = new DownloadsApi( $this->client, $this->request );
+        $sut = new DownloadsApi( $this->client, $this->request_factory, $GLOBALS['AUTH_TOKEN'] );
         $res = $sut->setResponseDecoder(new JsonApiResponseDecoder);
         $this->assertInstanceOf(DownloadsApiAbstract::class, $res);
     }
@@ -86,18 +97,18 @@ class DownloadsApiTest extends \PHPUnit\Framework\TestCase
 
     public function testClientInterceptors() : void
     {
-        $sut = new DownloadsApi( $this->client, $this->request );
+        $sut = new DownloadsApi( $this->client, $this->request_factory, $GLOBALS['AUTH_TOKEN'] );
         $psr_18 = $this->prophesize(ClientInterface::class)->reveal();
         $res = $sut->setClient($psr_18);
         $this->assertInstanceOf(DownloadsApiAbstract::class, $res);
     }
 
 
-    public function testRequestInterceptors() : void
+    public function testRequestFactoryInterceptors() : void
     {
-        $sut = new DownloadsApi( $this->client, $this->request );
-        $psr_7 = $this->prophesize(RequestInterface::class)->reveal();
-        $res = $sut->setRequest($psr_7);
+        $sut = new DownloadsApi( $this->client, $this->request_factory, $GLOBALS['AUTH_TOKEN'] );
+        $psr_7 = $this->prophesize(RequestFactoryInterface::class)->reveal();
+        $res = $sut->setRequestFactory($psr_7);
         $this->assertInstanceOf(DownloadsApiAbstract::class, $res);
     }
 
@@ -122,11 +133,13 @@ class DownloadsApiTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @dataProvider provideFilterParameters
-     * @depends testInstantiation
      * @param mixed $filter_params
      */
-    public function testRealApiCall($filter_params, DownloadsApiInterface $sut ) : void
+    public function testRealApiCall($filter_params ) : void
     {
+        $sut = new DownloadsApi( $this->client, $this->request_factory, $GLOBALS['AUTH_TOKEN'] );
+        $sut->setLogger( $this->getLogger() );
+
         $all = $sut->all($filter_params);
         $this->assertIsIterable($all);
 
@@ -146,10 +159,8 @@ class DownloadsApiTest extends \PHPUnit\Framework\TestCase
      */
     public function testInvalidAuthentication( $base_uri, $invalid_token, DownloadsApiInterface $sut ) : void
     {
-        $factory = new Factory;
-        $request = $factory->createRequest($base_uri, $invalid_token);
 
-        $sut->setRequest( $request );
+        $sut->setAuthentication($invalid_token);
 
         $filter_params = array();
 
@@ -165,11 +176,8 @@ class DownloadsApiTest extends \PHPUnit\Framework\TestCase
     public function provideInvalidAuthentication()
     {
         return array(
-            [ $GLOBALS['DOWNLOADS_API'], "invalid" ],
-            [ $GLOBALS['DOWNLOADS_API'], "" ],
-            [ "invalid",    $GLOBALS['AUTH_TOKEN'] ],
-            [ "",           $GLOBALS['AUTH_TOKEN'] ],
-            [ "",       "" ],
+            [ DownloadsApi::BASE_URL, "invalid" ],
+            [ DownloadsApi::BASE_URL, "" ],
         );
     }
 

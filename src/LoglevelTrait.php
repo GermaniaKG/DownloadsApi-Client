@@ -13,6 +13,7 @@ trait LoglevelTrait
      */
     public $error_loglevel = LogLevel::ERROR;
 
+
     /**
      * PSR-3 error_loglevel name on success
      *

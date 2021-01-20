@@ -6,6 +6,16 @@ interface DownloadsApiInterface
 {
 
     /**
+     * The DownloadsApi Base Url.
+     *
+     * Mind the trailing slash!
+     *
+     * @var string
+     */
+    const BASE_URL = "https://documents.germania-kg.com/v0/";
+
+
+    /**
      * @return iterable
      *
      * @throws \Germania\DownloadsApi\DownloadsApiExceptionInterface.
@@ -33,10 +43,16 @@ interface DownloadsApiInterface
     public function latest() : iterable;
 
 
+
     /**
-     * Returns an authentication ID for identification purposes.
-     *
-     * @return string
+     * @return string Authentication
      */
-    public function getAuthentication() : string;
+    public function getAuthentication( ) : string;
+
+
+    /**
+     * @param string $auth_token Authentication token
+     */
+    public function setAuthentication( string $auth_token ) : DownloadsApiInterface;
+
 }

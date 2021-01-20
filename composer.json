@@ -26,12 +26,12 @@
     "php": "^7.3|^8.0",
     "guzzlehttp/guzzle": "^7.0",
 		"guzzlehttp/psr7": "^1.7",
-		"germania-kg/jsondecoder": "^1.0",
 		"germania-kg/response-decoder": "^1.0",
 		"psr/log": "^1.1",
 		"psr/cache": "^1.0",
 		"psr/http-client": "^1.0",
-    "nyholm/psr7": "^1.3"
+    "nyholm/psr7": "^1.3",
+		"psr/http-factory": "^1.0"
 	},
 
 	"require-dev": {

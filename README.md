@@ -55,16 +55,13 @@ $logger = new \Monolog\Logger( ... );
 
 ### The DownloadsApi
 
-The **DownloadsApi** requires a PSR-18 *HTTP Client* as well as a *PSR-7 Request* template and a *PSR-6 Cache ItemPool*. It optionally accepts a *PSR-3 Logger* and/or PSR-3 *Loglevel names* for both error and success cases.
+The **DownloadsApi** requires a PSR-18 *HTTP Client* as well as a *PSR-7 Request* template and a *PSR-6 Cache ItemPool*. 
 
 ```php
 <?php
 use Germania\DownloadsApi\DownloadsApi;
 
-$client = new DownloadsApi($client, $request, $cache );
-$client = new DownloadsApi($client, $request, $cache, $logger );
-$client = new DownloadsApi($client, $request, $cache, $logger, "alert" );
-$client = new DownloadsApi($client, $request, $cache, $logger, "error", "info" );
+$client = new DownloadsApi($client, $request);
 ```
 
 
@@ -94,8 +91,8 @@ The resulting documents list will have been pre-filtered according to the permis
 **Caching:** The results are cached in the given *PSR-6 Cache Item Pool*. The cache item TTL depends on the `Cache-Control: max-age=SECONDS` header that came along the response to the *Guzzle Client* request. The default TTL is 3600 seconds. 
 
 ```php
-$downloads = $downloads_client->latest();
-$downloads = $downloads_client->all();
+$downloads = $client->latest();
+$downloads = $client->all();
 
 foreach( $downloads as $document):
 	print_r( $document );
@@ -164,8 +161,8 @@ $filters = array(
   'product' => "cars,bikes"
 );
 
-$downloads = $downloads_client->latest($filters);
-$downloads = $downloads_client->all($filters);
+$downloads = $client->latest($filters);
+$downloads = $client->all($filters);
 ```
 
 
@@ -174,24 +171,33 @@ $downloads = $downloads_client->all($filters);
 
 ## Errors and Exceptions
 
+It should be plenty to watch out for `\Germania\DownloadsApi\Exceptions\DownloadsApiExceptionInterface` since all concrete exceptions classes implement this interface.
+
 ```php
 <?php
-use Germania\DownloadsApi\{
-  DownloadsApiExceptionInterface,
-	DownloadsApiRuntimeException,
-  DownloadsApiUnexpectedValueException
-};
+use Germania\DownloadsApi\DownloadsApiExceptionInterface;
+use Germania\DownloadsApi\DownloadsApiRuntimeException;
+use Germania\DownloadsApi\DownloadsApiResponseException;
+use Germania\DownloadsApi\DownloadsApiUnexpectedValueException;
+
+try {
+  $client->latest();
+}
+catch (\Germania\DownloadsApi\DownloadsApiExceptionInterface $e) {
+  
+}
 ```
 
 
 
-### Exceptions during request
+**Exceptions during request:**
+Whenever a PSR-18 client request fails, a **DownloadsApiRuntimeException** will be thrown. This class implements `DownloadsApiExceptionInterface` and extends `\RuntimeException`.
 
-Just in case the *DownloadsApi* throws an exception, both the *all* and *latest* methods will return an **empty ArrayIterator**.  The error will be logged to the *PSR-3 Logger* passed to the constructor.
+**HTTP Error responses:**
+When a API call returns an HTTP error response, a **DownloadsApiResponseException** will be thrown. This class implements `DownloadsApiExceptionInterface` and extends `\RuntimeException`.
 
-### Unexpected values in response
-
-Whenever the response can't be decoded to a useful array, a  **DownloadsApiUnexpectedValueException** will be thrown. This class implements `DownloadsApiExceptionInterface` and extends `\UnexpectedValueException`.  The exception will be logged and bubble up.
+**Unexpected values in response:**
+Whenever a response (even with status 200 OK) can't be decoded to an useful array, a  **DownloadsApiUnexpectedValueException** will be thrown. This class implements `DownloadsApiExceptionInterface` and extends `\UnexpectedValueException`.
 
 
 
@@ -203,19 +209,11 @@ See [full issues list.][i0]
 
 
 
-## Development
-
-```bash
-$ git clone https://github.com/GermaniaKG/DownloadsApi-Client.git
-$ cd DownloadsApi-Client
-$ composer install
-```
-
-
-
 ## Unit tests
 
-Copy `phpunit.xml.dist` to `phpunit.xml` and adapt the **DOWNLOADS_API** and **AUTH_TOKEN** environment variables. Then run [PhpUnit](https://phpunit.de/) like this:
+Copy `phpunit.xml.dist` to `phpunit.xml` and fill in the **AUTH_TOKEN** you ontained from Germania. 
+
+Run [PhpUnit](https://phpunit.de/) like this:
 
 ```bash
 $ composer test

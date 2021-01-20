@@ -2,15 +2,21 @@
 namespace Germania\DownloadsApi;
 
 use Psr\Log\LoggerAwareTrait;
+use Psr\Log\NullLogger;
 
 abstract class DownloadsApiAbstract implements DownloadsApiInterface
 {
 
 
 	use LoggerAwareTrait,
-        LoglevelTrait;
+        LoglevelTrait,
+        AuthenticationTrait;
 
 
+    public function __construct()
+    {
+        $this->setLogger( new NullLogger );
+    }
 
     /**
      * @return iterable
