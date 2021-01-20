@@ -25,7 +25,7 @@ class CacheDownloadsApiDecorator extends DownloadsApiDecorator
      *
      * @var integer
      */
-    protected $default_cache_lifetime = 14400;
+    protected $cache_lifetime = 14400;
 
 
 
@@ -79,7 +79,7 @@ class CacheDownloadsApiDecorator extends DownloadsApiDecorator
 
         $cache_item->set( $downloads );
 
-        $lifetime = $this->getDefaultCacheLifetime();
+        $lifetime = $this->getCacheLifetime();
         $cache_item->expiresAfter( $lifetime );
 
         $this->cache_itempool->save($cache_item);
@@ -132,9 +132,9 @@ class CacheDownloadsApiDecorator extends DownloadsApiDecorator
     /**
      * @param int $seconds
      */
-    public function setDefaultCacheLifetime( int $seconds ) : self
+    public function setCacheLifetime( int $seconds ) : self
     {
-        $this->default_cache_lifetime = $seconds;
+        $this->cache_lifetime = $seconds;
         return $this;
     }
 
@@ -143,9 +143,9 @@ class CacheDownloadsApiDecorator extends DownloadsApiDecorator
     /**
      * @return int $seconds
      */
-    public function getDefaultCacheLifetime() : int
+    public function getCacheLifetime() : int
     {
-        return $this->default_cache_lifetime;
+        return $this->cache_lifetime;
     }
 
 

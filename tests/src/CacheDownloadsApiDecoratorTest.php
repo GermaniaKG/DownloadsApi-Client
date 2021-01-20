@@ -78,10 +78,10 @@ class CacheDownloadsApiDecoratorTest extends \PHPUnit\Framework\TestCase
      */
     public function testDefaultCacheLifetimeInterceptors( DownloadsApiInterface $sut ) : void
     {
-        $old_ttl = $sut->getDefaultCacheLifetime();
+        $old_ttl = $sut->getCacheLifetime();
         $new_ttl = 100;
 
-        $result = $sut->setDefaultCacheLifetime($new_ttl)->getDefaultCacheLifetime();
+        $result = $sut->setCacheLifetime($new_ttl)->getCacheLifetime();
         $this->assertEquals($result, $new_ttl);
     }
 
