@@ -1,0 +1,10 @@
+# phpstan.neon
+
+parameters:
+    level: 4
+    paths:
+        - src
+        - tests
+
+    excludePaths:
+        - tests/src/*
