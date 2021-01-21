@@ -1,11 +1,11 @@
 {
 	"name": "germania-kg/downloadsapi-client",
-	"description": "A HTTP-Client for Germania's Downloads API",
+	"description": "API Client for Germania's Downloads API",
 
 	"authors": [
 		{
 			"name": "Carsten Witt",
-			"email": "carstenwitt@germania-kg.de",
+			"email": "admin@germania-kg.com",
 			"role": "Developer"
 		}
 	],

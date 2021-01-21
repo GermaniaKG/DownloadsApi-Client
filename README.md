@@ -24,7 +24,7 @@ $ composer require germania-kg/downloadsapi-client
 $ composer require germania-kg/downloadsapi-client:^5.0
 ```
 
-This package requires a *PSR-18 HTTP client* implementation and a *PSR-17 HTT factory* implementation. Suggestions are [Guzzle 7](https://packagist.org/packages/guzzlehttp/guzzle) via [guzzlehttp/guzzle](https://packagist.org/packages/guzzlehttp/) and Nyholm's [nyholm/psr7](nyholm/psr7):
+This package requires a *PSR-18 HTTP client* implementation and a *PSR-17 HTT factory* implementation. Suggestions are [Guzzle 7](https://packagist.org/packages/guzzlehttp/guzzle) via [guzzlehttp/guzzle](https://packagist.org/packages/guzzlehttp/) and Nyholm's [nyholm/psr7](nyholm/psr7) which (despite its name) provides the PSR-17 factories:
 
 ```bash
 $ composer require nyholm/psr7
@@ -68,7 +68,7 @@ $api->getAuthentication(); // "secret"
 
 
 
-### Cache Support
+### PSR-6 Cache Support
 
 Class **CacheDownloadsApiDecorator** wraps an existing *DownloadsApi* instance and adds caching. It extends *DownloadsApiDecorator* which itself extends *DownloadsApiAbstract*, so the class also implements *DownloadsApiInterface*.
 
@@ -89,9 +89,9 @@ $cached_api = new CacheDownloadsApiDecorator( $api, $psr6, 14400);
 
 
 
-### API client
+### The API client
 
-The **DownloadsApi** extends *DownloadsApiAbstract* und thus implements *DownloadsApiInterface*. The constructor requires a *PSR-18 HTTP Client*, a *PSR-17 Request factory* and an *token string* that works as API key.
+The **DownloadsApi** API client extends *DownloadsApiAbstract* und thus implements *DownloadsApiInterface*. The constructor requires a *PSR-18 HTTP Client*, a *PSR-17 Request factory* and an *API key*. – To obtain an API key, ask the web developers over at Germania KG.
 
 ```php
 <?php
