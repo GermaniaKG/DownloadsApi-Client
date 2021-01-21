@@ -24,7 +24,7 @@ $ composer require germania-kg/downloadsapi-client
 $ composer require germania-kg/downloadsapi-client:^5.0
 ```
 
-This package requires a *PSR-18 HTTP client* implementation and a *PSR-17 HTT factory* implementation. Suggestions are [Guzzle 7](https://packagist.org/packages/guzzlehttp/guzzle) via [guzzlehttp/guzzle](https://packagist.org/packages/guzzlehttp/) and Nyholm's [nyholm/psr7](nyholm/psr7) which (despite its name) provides the PSR-17 factories:
+This package requires a *PSR-18 HTTP client* implementation and a *PSR-17 HTT factory* implementation. Suggestions are [Guzzle 7](https://packagist.org/packages/guzzlehttp/guzzle) via [guzzlehttp/guzzle](https://packagist.org/packages/guzzlehttp/) and Nyholm's [nyholm/psr7](nyholm/psr7) which (despite its name) provides the PSR-17 factories as well:
 
 ```bash
 $ composer require nyholm/psr7
@@ -70,7 +70,7 @@ $api->getAuthentication(); // "secret"
 
 ### PSR-6 Cache Support
 
-Class **CacheDownloadsApiDecorator** wraps an existing *DownloadsApi* instance and adds caching. It extends *DownloadsApiDecorator* which itself extends *DownloadsApiAbstract*, so the class also implements *DownloadsApiInterface*.
+Class **CacheDownloadsApiDecorator** wraps an existing *DownloadsApi* instance and adds support for *PSR-6 Caches*. It extends *DownloadsApiDecorator* which itself extends *DownloadsApiAbstract*, so the class also implements *DownloadsApiInterface*.
 
 The constructor requires a ***DownloadsApi*** (or *DownloadsApiInterface)* instance and a ***PSR-6 Cache Item Pool***. You may optionally pass a ***cache lifetime*** in seconds which defaults to 14400 (4 hours).
 
