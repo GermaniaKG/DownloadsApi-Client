@@ -217,6 +217,23 @@ Whenever a response (even with status 200 OK) can't be decoded to an useful arra
 
 
 
+## Unit tests and development
+
+Copy `phpunit.xml.dist` to `phpunit.xml` and fill in the **Authentication data** you obtained from Germania. 
+
+- `AUTH_TOKEN` when you've got an auth token for the Downloads API at hand.
+- Otherwise, fill in `AUTH_API`, `AUTH_USER`, and `AUTH_PASS` . The auth token will then be fetched from Germania's Auth API before each test.
+
+In order to run unit tests, run [PhpUnit](https://phpunit.de/) like this:
+
+```bash
+$ composer test
+# or
+$ vendor/bin/phpunit
+```
+
+
+
 ## Issues
 
 See [full issues list.][i0]
@@ -225,15 +242,4 @@ See [full issues list.][i0]
 
 
 
-## Unit tests
-
-Copy `phpunit.xml.dist` to `phpunit.xml` and fill in the **AUTH_TOKEN** you obtained from Germania. 
-
-Run [PhpUnit](https://phpunit.de/) like this:
-
-```bash
-$ composer test
-# or
-$ vendor/bin/phpunit
-```
-
+## 
