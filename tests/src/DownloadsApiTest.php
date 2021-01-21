@@ -53,12 +53,30 @@ class DownloadsApiTest extends \PHPUnit\Framework\TestCase
      */
     public $client;
 
+    /**
+     * @var string
+     */
+    public $authentication;
+
+
+    /**
+     * Store the Auth Token between tests
+     * in order to avoid asking Auth API with each setUp() run.
+     * @var string
+     */
+    protected static $authentication_cache;
+
 
     public function setUp() : void
     {
         $this->client = new GuzzleClient;
         $this->request_factory = new Psr17Factory;
         $this->response_factory = new Psr17Factory;
+
+        if (empty(static::$authentication_cache)) {
+            static::$authentication_cache = $this->getAuthenticationToken();
+        }
+        $this->authentication = static::$authentication_cache;
     }
 
 
@@ -70,7 +88,7 @@ class DownloadsApiTest extends \PHPUnit\Framework\TestCase
      */
 	public function testInstantiation() : DownloadsApi
 	{
-		$sut = new DownloadsApi( $this->client, $this->request_factory, $GLOBALS['AUTH_TOKEN'] );
+		$sut = new DownloadsApi( $this->client, $this->request_factory, $this->authentication );
         $sut->setLogger( $this->getLogger());
 
         $this->assertInstanceOf(DownloadsApiInterface::class, $sut);
@@ -81,7 +99,7 @@ class DownloadsApiTest extends \PHPUnit\Framework\TestCase
 
     public function testErrorLevelInterceptors() : void
     {
-        $sut = new DownloadsApi( $this->client, $this->request_factory, $GLOBALS['AUTH_TOKEN'] );
+        $sut = new DownloadsApi( $this->client, $this->request_factory, $this->authentication );
 
         $res = $sut->setErrorLoglevel(\Psr\Log\LogLevel::DEBUG);
         $this->assertInstanceOf(DownloadsApiAbstract::class, $res);
@@ -93,7 +111,7 @@ class DownloadsApiTest extends \PHPUnit\Framework\TestCase
 
     public function testResponseDecorderInterceptors() : void
     {
-        $sut = new DownloadsApi( $this->client, $this->request_factory, $GLOBALS['AUTH_TOKEN'] );
+        $sut = new DownloadsApi( $this->client, $this->request_factory, $this->authentication );
         $res = $sut->setResponseDecoder(new JsonApiResponseDecoder);
         $this->assertInstanceOf(DownloadsApiAbstract::class, $res);
     }
@@ -101,7 +119,7 @@ class DownloadsApiTest extends \PHPUnit\Framework\TestCase
 
     public function testClientInterceptors() : void
     {
-        $sut = new DownloadsApi( $this->client, $this->request_factory, $GLOBALS['AUTH_TOKEN'] );
+        $sut = new DownloadsApi( $this->client, $this->request_factory, $this->authentication );
         $psr_18 = $this->prophesize(ClientInterface::class)->reveal();
         $res = $sut->setClient($psr_18);
         $this->assertInstanceOf(DownloadsApiAbstract::class, $res);
@@ -110,7 +128,7 @@ class DownloadsApiTest extends \PHPUnit\Framework\TestCase
 
     public function testRequestFactoryInterceptors() : void
     {
-        $sut = new DownloadsApi( $this->client, $this->request_factory, $GLOBALS['AUTH_TOKEN'] );
+        $sut = new DownloadsApi( $this->client, $this->request_factory, $this->authentication );
         $psr_7 = $this->prophesize(RequestFactoryInterface::class)->reveal();
         $res = $sut->setRequestFactory($psr_7);
         $this->assertInstanceOf(DownloadsApiAbstract::class, $res);
@@ -141,7 +159,7 @@ class DownloadsApiTest extends \PHPUnit\Framework\TestCase
      */
     public function testRealApiCall($filter_params ) : void
     {
-        $sut = new DownloadsApi( $this->client, $this->request_factory, $GLOBALS['AUTH_TOKEN'] );
+        $sut = new DownloadsApi( $this->client, $this->request_factory, $this->authentication );
         $sut->setLogger( $this->getLogger() );
 
         $all = $sut->all($filter_params);
@@ -301,6 +319,41 @@ class DownloadsApiTest extends \PHPUnit\Framework\TestCase
 		);
 	}
 
+
+
+    protected function getAuthenticationToken() : string
+    {
+        if (!empty($GLOBALS['AUTH_TOKEN'])) {
+            return $GLOBALS['AUTH_TOKEN'];
+        }
+
+        if (empty($GLOBALS['AUTH_API'])
+        or empty($GLOBALS['AUTH_USER'])
+        or empty($GLOBALS['AUTH_PASS'])) {
+            throw new \RuntimeException("Authentication data missing in phpunit.xml");
+        }
+
+        $guzzle = new GuzzleClient([ 'base_uri' => $GLOBALS['AUTH_API'] ]);
+
+        echo "\n\nAsk Authentication API\n\n";
+
+        $response = $guzzle->request("POST", 'login', [
+            'form_params' => [
+                'username' => $GLOBALS['AUTH_USER'],
+                'password' => $GLOBALS['AUTH_PASS']
+            ]
+        ]);
+        $response_body = $response->getBody();
+        $response_body_string = $response_body->__toString();
+
+        $response_body_decoded = json_decode($response_body_string, (bool) "assoc");
+        $authentication = $response_body_decoded['access_token'] ?? null;
+
+        if (empty($authentication)) {
+            throw new \RuntimeException("Retrieved 'access_token' empty?!");
+        }
+        return $authentication;
+    }
 
 
 }

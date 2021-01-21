@@ -25,7 +25,15 @@
   </testsuites>
 
 	<php>
-		<var name="AUTH_TOKEN" value="manymanyletters" />
+	    <!-- Fill in these fields -->
+	  	<var name="AUTH_API" value=""/>
+	  	<var name="AUTH_USER" value=""/>
+	  	<var name="AUTH_PASS" value=""/>
+
+	  	<!-- Or hardcode your API key here -->
+	    <var name="AUTH_TOKEN" value=""/>
+
+	    <!-- CLI Logging output verbosity. Laminas uses integers! -->
 		<var name="LAMINAS_LOGLEVEL" value="4"/>
 	</php>
 
