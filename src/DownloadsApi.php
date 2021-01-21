@@ -82,7 +82,7 @@ class DownloadsApi extends DownloadsApiAbstract
     /**
      * Sets the PSR-17 Request factory to work with
      *
-     * @param Psr\Http\Message\RequestFactoryInterface $request_factory
+     * @param \Psr\Http\Message\RequestFactoryInterface $request_factory
      */
     public function setRequestFactory( RequestFactoryInterface $request_factory ) : self
     {
@@ -158,7 +158,7 @@ class DownloadsApi extends DownloadsApiAbstract
      * @param  string $path    Request URL path
      * @param  array  $filters Filters array
      *
-     * @return Psr\Http\Message\RequestInterface
+     * @return \Psr\Http\Message\RequestInterface
      */
     protected function createRequest(string $path, array $filters = array()) : RequestInterface
     {
