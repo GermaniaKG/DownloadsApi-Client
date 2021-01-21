@@ -40,11 +40,11 @@ class CacheDownloadsApiDecorator extends DownloadsApiDecorator
      * @param \Psr\Cache\CacheItemPoolInterface             $cache     PSR-6 Cache
      * @param int                                           $lifetime  Optional: Cache lifetime, default is `14400`
      */
-    public function __construct( DownloadsApiInterface $client, CacheItemPoolInterface $cache, int $lifetime = 14400)
+    public function __construct(DownloadsApiInterface $client, CacheItemPoolInterface $cache, int $lifetime = 14400)
     {
-        parent::__construct( $client );
-        $this->setCacheItemPool( $cache );
-        $this->setCacheLifetime( $lifetime );
+        parent::__construct($client);
+        $this->setCacheItemPool($cache);
+        $this->setCacheLifetime($lifetime);
     }
 
 
@@ -57,36 +57,36 @@ class CacheDownloadsApiDecorator extends DownloadsApiDecorator
      *
      * @return iterable
      */
-    public function request( string $path, array $filters = array() ) : iterable
+    public function request(string $path, array $filters = array()) : iterable
     {
         $cache_key  = $this->makeCacheKey($path, $filters);
-        $cache_item = $this->cache_itempool->getItem( $cache_key );
+        $cache_item = $this->cache_itempool->getItem($cache_key);
 
         if ($cache_item->isHit()):
             $downloads = $cache_item->get();
 
-            $this->logger->log( $this->success_loglevel, "Documents list found in cache", [
+        $this->logger->log($this->success_loglevel, "Documents list found in cache", [
                 'path' => $path,
                 'count' => count($downloads)
             ]);
 
-            return $downloads;
+        return $downloads;
         endif;
 
         $this->logger->debug("Documents not found or stale, delete cache item.");
         $this->cache_itempool->deleteItem($cache_key);
 
         // Delegate to decoratee
-        $downloads = $this->client->request($path, $filters );
+        $downloads = $this->client->request($path, $filters);
 
-        $cache_item->set( $downloads );
+        $cache_item->set($downloads);
 
         $lifetime = $this->getCacheLifetime();
-        $cache_item->expiresAfter( $lifetime );
+        $cache_item->expiresAfter($lifetime);
 
         $this->cache_itempool->save($cache_item);
 
-        $this->logger->log( $this->success_loglevel, "Documents list stored in cache", [
+        $this->logger->log($this->success_loglevel, "Documents list stored in cache", [
             'path' => $path,
             'count' => count($downloads),
             'lifetime' => $lifetime
@@ -101,7 +101,7 @@ class CacheDownloadsApiDecorator extends DownloadsApiDecorator
      *
      * @param  array  $filters
      */
-    public function all( array $filters = array() ) : iterable
+    public function all(array $filters = array()) : iterable
     {
         return $this->request("all", $filters);
     }
@@ -113,9 +113,9 @@ class CacheDownloadsApiDecorator extends DownloadsApiDecorator
      *
      * @param  array $filters
      */
-    public function latest( array $filters = array() ) : iterable
+    public function latest(array $filters = array()) : iterable
     {
-        return $this->request("latest", $filters );
+        return $this->request("latest", $filters);
     }
 
 
@@ -124,7 +124,7 @@ class CacheDownloadsApiDecorator extends DownloadsApiDecorator
     /**
      * @param \Psr\Cache\CacheItemPoolInterface $cache PSR-6 CacheItem Pool
      */
-    public function setCacheItemPool( CacheItemPoolInterface $cache  ) : self
+    public function setCacheItemPool(CacheItemPoolInterface $cache) : self
     {
         $this->cache_itempool = $cache;
         return $this;
@@ -134,7 +134,7 @@ class CacheDownloadsApiDecorator extends DownloadsApiDecorator
     /**
      * @param int $seconds
      */
-    public function setCacheLifetime( int $seconds ) : self
+    public function setCacheLifetime(int $seconds) : self
     {
         $this->cache_lifetime = $seconds;
         return $this;
@@ -164,8 +164,6 @@ class CacheDownloadsApiDecorator extends DownloadsApiDecorator
     {
         $filters_hash = md5(serialize($filters));
         $auth = $this->getAuthentication();
-        return hash($this->cache_key_hash_algo, $path . $auth . $filters_hash, false );
+        return hash($this->cache_key_hash_algo, $path . $auth . $filters_hash, false);
     }
-
-
 }

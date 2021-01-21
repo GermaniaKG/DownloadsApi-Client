@@ -25,7 +25,7 @@ trait LoglevelTrait
     /**
      * @param string $loglevel \Psr\Log\LogLevel constant
      */
-    public function setErrorLoglevel( string $loglevel ) : self
+    public function setErrorLoglevel(string $loglevel) : self
     {
         $this->error_loglevel = $loglevel;
         return $this;
@@ -35,10 +35,9 @@ trait LoglevelTrait
     /**
      * @param string $loglevel \Psr\Log\LogLevel constant
      */
-    public function setSuccessLoglevel( string $loglevel ) : self
+    public function setSuccessLoglevel(string $loglevel) : self
     {
         $this->success_loglevel = $loglevel;
         return $this;
     }
-
 }

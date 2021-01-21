@@ -1,7 +1,6 @@
 <?php
 namespace Germania\DownloadsApi;
 
-
 /**
  * Use this abstract class as base class for any decorator.
  */
@@ -19,10 +18,10 @@ class DownloadsApiDecorator extends DownloadsApiAbstract
     /**
      * @param \Germania\DownloadsApi\DownloadsApiInterface $client DownloadsApi client decoratee
      */
-    public function __construct( DownloadsApiInterface $client )
+    public function __construct(DownloadsApiInterface $client)
     {
         parent::__construct();
-        $this->decorate( $client );
+        $this->decorate($client);
     }
 
 
@@ -31,7 +30,7 @@ class DownloadsApiDecorator extends DownloadsApiAbstract
      *
      * @param \Germania\DownloadsApi\DownloadsApiInterface $client DownloadsApi client
      */
-    public function decorate( DownloadsApiInterface $client ) : self
+    public function decorate(DownloadsApiInterface $client) : self
     {
         $this->client = $client;
         return $this;
@@ -41,9 +40,9 @@ class DownloadsApiDecorator extends DownloadsApiAbstract
     /**
      * @inheritDoc
      */
-    public function request( string $path, array $filters = array()  ) : iterable
+    public function request(string $path, array $filters = array()) : iterable
     {
-        return $this->client->request($path, $filters );
+        return $this->client->request($path, $filters);
     }
 
 
@@ -53,9 +52,9 @@ class DownloadsApiDecorator extends DownloadsApiAbstract
      *
      * @param  array  $filters
      */
-    public function all( array $filters = array() ) : iterable
+    public function all(array $filters = array()) : iterable
     {
-        return $this->client->all($filters );
+        return $this->client->all($filters);
     }
 
 
@@ -64,9 +63,9 @@ class DownloadsApiDecorator extends DownloadsApiAbstract
      *
      * @param  array $filters
      */
-    public function latest( array $filters = array() ) : iterable
+    public function latest(array $filters = array()) : iterable
     {
-        return $this->client->latest($filters );
+        return $this->client->latest($filters);
     }
 
 
@@ -82,10 +81,9 @@ class DownloadsApiDecorator extends DownloadsApiAbstract
     /**
      * @inheritDoc
      */
-    public function setAuthentication( $auth_token ) : self
+    public function setAuthentication($auth_token) : self
     {
-        $this->client->setAuthentication( $auth_token );
+        $this->client->setAuthentication($auth_token);
         return $this;
     }
-
 }

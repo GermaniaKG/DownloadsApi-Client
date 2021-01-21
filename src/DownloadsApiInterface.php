@@ -1,7 +1,6 @@
 <?php
 namespace Germania\DownloadsApi;
 
-
 interface DownloadsApiInterface
 {
 
@@ -20,7 +19,7 @@ interface DownloadsApiInterface
      *
      * @throws \Germania\DownloadsApi\DownloadsApiExceptionInterface.
      */
-    public function request( string $path ) : iterable ;
+    public function request(string $path) : iterable ;
 
 
     /**
@@ -47,12 +46,11 @@ interface DownloadsApiInterface
     /**
      * @return string API Key
      */
-    public function getAuthentication( ) : string;
+    public function getAuthentication() : string;
 
 
     /**
      * @param string|null $key API Key
      */
-    public function setAuthentication( ?string $key ) : DownloadsApiInterface;
-
+    public function setAuthentication(?string $key) : DownloadsApiInterface;
 }

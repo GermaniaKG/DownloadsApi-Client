@@ -1,41 +1,33 @@
 <?php
 namespace Germania\DownloadsApi;
 
-use Germania\DownloadsApi\Exceptions\{
-    DownloadsApiUnexpectedValueException,
-    DownloadsApiRuntimeException,
-    DownloadsApiResponseException,
-};
+use Germania\DownloadsApi\Exceptions\DownloadsApiUnexpectedValueException;
+use Germania\DownloadsApi\Exceptions\DownloadsApiRuntimeException;
+use Germania\DownloadsApi\Exceptions\DownloadsApiResponseException;
 
 
-use Psr\Http\{
-    Client\ClientInterface,
-    Client\ClientExceptionInterface,
-    Message\RequestFactoryInterface,
-    Message\RequestInterface,
-    Message\ResponseInterface
-};
+use Psr\Http\Client\ClientInterface;
+use Psr\Http\Client\ClientExceptionInterface;
+use Psr\Http\Message\RequestFactoryInterface;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 
-use Germania\ResponseDecoder\{
-    JsonApiResponseDecoder,
-    ResponseDecoderTrait,
-    ReponseDecoderExceptionInterface
-};
-
+use Germania\ResponseDecoder\JsonApiResponseDecoder;
+use Germania\ResponseDecoder\ResponseDecoderTrait;
+use Germania\ResponseDecoder\ReponseDecoderExceptionInterface;
 
 /**
  * The Downloads API Client
  */
 class DownloadsApi extends DownloadsApiAbstract
 {
+    use ResponseDecoderTrait;
 
-	use ResponseDecoderTrait;
-
-	/**
+    /**
      * PSR-18 HTTP Client
-	 * @var ClientInterface
-	 */
-	protected $client;
+     * @var ClientInterface
+     */
+    protected $client;
 
 
     /**
@@ -46,22 +38,22 @@ class DownloadsApi extends DownloadsApiAbstract
 
 
 
-	/**
-	 * @param ClientInterface          $client            PSR-18 HTTP Client
+    /**
+     * @param ClientInterface          $client            PSR-18 HTTP Client
      * @param RequestFactoryInterface  $request_factory   PSR-17 Request Factory
      * @param string                   $auth_token        Auth token
      *
-	 */
-	public function __construct(ClientInterface $client, RequestFactoryInterface $request_factory, string $auth_token )
-	{
+     */
+    public function __construct(ClientInterface $client, RequestFactoryInterface $request_factory, string $auth_token)
+    {
         parent::__construct();
 
-		$this->setClient( $client );
-        $this->setRequestFactory( $request_factory );
-        $this->setAuthentication( $auth_token );
+        $this->setClient($client);
+        $this->setRequestFactory($request_factory);
+        $this->setAuthentication($auth_token);
 
-        $this->setResponseDecoder( new JsonApiResponseDecoder );
-	}
+        $this->setResponseDecoder(new JsonApiResponseDecoder);
+    }
 
 
 
@@ -72,7 +64,7 @@ class DownloadsApi extends DownloadsApiAbstract
      *
      * @param ClientInterface $client
      */
-    public function setClient( ClientInterface $client ) : self
+    public function setClient(ClientInterface $client) : self
     {
         $this->client = $client;
         return $this;
@@ -84,7 +76,7 @@ class DownloadsApi extends DownloadsApiAbstract
      *
      * @param \Psr\Http\Message\RequestFactoryInterface $request_factory
      */
-    public function setRequestFactory( RequestFactoryInterface $request_factory ) : self
+    public function setRequestFactory(RequestFactoryInterface $request_factory) : self
     {
         $this->request_factory = $request_factory;
         return $this;
@@ -93,26 +85,25 @@ class DownloadsApi extends DownloadsApiAbstract
 
 
 
-	/**
-	 * @param  string $path    Request URL path
-	 * @param  array  $filters Filters array
-	 *
-	 * @return iterable
-	 */
-	public function request( string $path, array $filters = array() ) : iterable
-	{
-		$start_time = microtime("float");
+    /**
+     * @param  string $path    Request URL path
+     * @param  array  $filters Filters array
+     *
+     * @return iterable
+     */
+    public function request(string $path, array $filters = array()) : iterable
+    {
+        $start_time = microtime("float");
 
-		// ---------------------------------------------------
-		// Ask remote API
-		// ---------------------------------------------------
+        // ---------------------------------------------------
+        // Ask remote API
+        // ---------------------------------------------------
 
-		try {
-
-            $request = $this->createRequest( $path, $filters);
+        try {
+            $request = $this->createRequest($path, $filters);
 
             // May throw \Psr\Http\Client\ClientExceptionInterface
-			$response = $this->client->sendRequest( $request);
+            $response = $this->client->sendRequest($request);
 
 
             // Response validation:
@@ -121,9 +112,9 @@ class DownloadsApi extends DownloadsApiAbstract
             // when getting an HTTP error response.
             // We have self to check for error reasons.
             if ($response->getStatusCode() != 200):
-                $error = $this->getErrorResponseInformation( $response );
-                $msg = sprintf("Response ended up with status '%s'. %s: %s", $error['status'], $error['title'], $error['detail']);
-                throw new DownloadsApiResponseException($msg, $error['status']);
+                $error = $this->getErrorResponseInformation($response);
+            $msg = sprintf("Response ended up with status '%s'. %s: %s", $error['status'], $error['title'], $error['detail']);
+            throw new DownloadsApiResponseException($msg, $error['status']);
             endif;
 
 
@@ -132,25 +123,21 @@ class DownloadsApi extends DownloadsApiAbstract
             $downloads = $this->getResponseDecoder()->getResourceCollection($response);
 
 
-            $this->logger->log( $this->success_loglevel, "Retrieved documents list", [
+            $this->logger->log($this->success_loglevel, "Retrieved documents list", [
                 'path' => $path,
                 'count' => count($downloads),
                 'time' => ((microtime("float") - $start_time) * 1000) . "ms"
             ]);
 
             return $downloads;
-
-		}
-
-		catch (ReponseDecoderExceptionInterface $e) {
+        } catch (ReponseDecoderExceptionInterface $e) {
             $msg = sprintf("DocumentsApi caught exception: %s", $e->getMessage());
-            throw new DownloadsApiUnexpectedValueException($msg,0, $e);
-		}
-        catch (\Throwable $e) {
+            throw new DownloadsApiUnexpectedValueException($msg, 0, $e);
+        } catch (\Throwable $e) {
             $msg = sprintf("DocumentsApi caught exception: %s", $e->getMessage());
-            throw new DownloadsApiRuntimeException($msg,0, $e);
+            throw new DownloadsApiRuntimeException($msg, 0, $e);
         }
-	}
+    }
 
 
 
@@ -167,11 +154,11 @@ class DownloadsApi extends DownloadsApiAbstract
 
         $request = $this->request_factory
                         ->createRequest("GET", $url)
-                        ->withHeader('Authorization', $auth_header );
+                        ->withHeader('Authorization', $auth_header);
 
         $query = http_build_query(['filter' => $filters]);
         $filter_uri = $request->getUri()->withQuery($query);
-        $request = $request->withUri( $filter_uri );
+        $request = $request->withUri($filter_uri);
 
         return $request;
     }
@@ -182,7 +169,7 @@ class DownloadsApi extends DownloadsApiAbstract
      * @param  ResponseInterface $response
      * @return string[]
      */
-    protected function getErrorResponseInformation( ResponseInterface $response ) : array
+    protected function getErrorResponseInformation(ResponseInterface $response) : array
     {
         $response_body = $response->getBody()->__toString();
 
@@ -192,8 +179,4 @@ class DownloadsApi extends DownloadsApiAbstract
 
         return $error;
     }
-
-
-
 }
-
