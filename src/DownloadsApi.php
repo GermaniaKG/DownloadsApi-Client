@@ -131,6 +131,7 @@ class DownloadsApi extends DownloadsApiAbstract
             // This may throw \Germania\ResponseDecoder\ReponseDecoderExceptionInterface
             $downloads = $this->getResponseDecoder()->getResourceCollection($response);
 
+
             $this->logger->log( $this->success_loglevel, "Retrieved documents list", [
                 'path' => $path,
                 'count' => count($downloads),

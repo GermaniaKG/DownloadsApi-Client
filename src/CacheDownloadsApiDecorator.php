@@ -36,13 +36,15 @@ class CacheDownloadsApiDecorator extends DownloadsApiDecorator
 
 
     /**
-     * @param \Germania\DownloadsApi\DownloadsApiInterface  $client  AuthApi client decoratee
-     * @param \Psr\Cache\CacheItemPoolInterface                $cache   PSR-6 Cache
+     * @param \Germania\DownloadsApi\DownloadsApiInterface  $client    AuthApi client decoratee
+     * @param \Psr\Cache\CacheItemPoolInterface             $cache     PSR-6 Cache
+     * @param int                                           $lifetime  Optional: Cache lifetime, default is `14400`
      */
-    public function __construct( DownloadsApiInterface $client, CacheItemPoolInterface $cache )
+    public function __construct( DownloadsApiInterface $client, CacheItemPoolInterface $cache, int $lifetime = 14400)
     {
         parent::__construct( $client );
         $this->setCacheItemPool( $cache );
+        $this->setCacheLifetime( $lifetime );
     }
 
 

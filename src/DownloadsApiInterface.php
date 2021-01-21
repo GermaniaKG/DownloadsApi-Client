@@ -45,14 +45,14 @@ interface DownloadsApiInterface
 
 
     /**
-     * @return string Authentication
+     * @return string API Key
      */
     public function getAuthentication( ) : string;
 
 
     /**
-     * @param string $auth_token Authentication token
+     * @param string|null $key API Key
      */
-    public function setAuthentication( string $auth_token ) : DownloadsApiInterface;
+    public function setAuthentication( ?string $key ) : DownloadsApiInterface;
 
 }

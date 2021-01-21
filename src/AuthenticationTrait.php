@@ -15,7 +15,7 @@ trait AuthenticationTrait
 
 
     /**
-     * @return string Authentication token
+     * @return string API key
      */
     public function getAuthentication( ) : string
     {
@@ -24,11 +24,11 @@ trait AuthenticationTrait
 
 
     /**
-     * @param string $auth_token Authentication token
+     * @param string $key API key
      */
-    public function setAuthentication( string $auth_token ) : self
+    public function setAuthentication(  ?string $key ) : self
     {
-        $this->auth_token = $auth_token;
+        $this->auth_token = (string) $key;
         return $this;
     }
 }

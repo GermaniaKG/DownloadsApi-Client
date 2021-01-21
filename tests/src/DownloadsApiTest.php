@@ -27,10 +27,8 @@ use Germania\ResponseDecoder\ReponseDecoderException;
 
 use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\Exception\RequestException;
-use GuzzleHttp\Psr7\Response;
 
 use Nyholm\Psr7\Factory\Psr17Factory;
-
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 
@@ -39,6 +37,11 @@ class DownloadsApiTest extends \PHPUnit\Framework\TestCase
 
     use ProphecyTrait,
         LoggerTrait;
+
+    /**
+     * @var \Psr\Http\Message\ResponseFactoryInterface
+     */
+    public $response_factory;
 
     /**
      * @var \Psr\Http\Message\RequestFactoryInterface
@@ -55,6 +58,7 @@ class DownloadsApiTest extends \PHPUnit\Framework\TestCase
     {
         $this->client = new GuzzleClient;
         $this->request_factory = new Psr17Factory;
+        $this->response_factory = new Psr17Factory;
     }
 
 
@@ -154,10 +158,9 @@ class DownloadsApiTest extends \PHPUnit\Framework\TestCase
     /**
      * @dataProvider provideInvalidAuthentication
      * @depends testInstantiation
-     * @param mixed $base_uri
      * @param mixed $invalid_token
      */
-    public function testInvalidAuthentication( $base_uri, $invalid_token, DownloadsApiInterface $sut ) : void
+    public function testInvalidAuthentication( $invalid_token, DownloadsApiInterface $sut ) : void
     {
 
         $sut->setAuthentication($invalid_token);
@@ -176,8 +179,9 @@ class DownloadsApiTest extends \PHPUnit\Framework\TestCase
     public function provideInvalidAuthentication()
     {
         return array(
-            [ DownloadsApi::BASE_URL, "invalid" ],
-            [ DownloadsApi::BASE_URL, "" ],
+            [ "invalid" ],
+            [ "" ],
+            [ null ]
         );
     }
 
@@ -240,7 +244,8 @@ class DownloadsApiTest extends \PHPUnit\Framework\TestCase
 	 */
 	public function testAllDocumentsExceptionOnWeirdResponseBody( string $body, DownloadsApiInterface $sut ) : void
 	{
-		$response = new Response( 200, array(), $body );
+		$response = $this->response_factory->createResponse( 200 );
+        $response->getBody()->write( $body);
 
 		$client_stub = $this->prophesize( ClientInterface::class );
 		$client_stub->sendRequest( Argument::type(RequestInterface::class))
@@ -263,7 +268,8 @@ class DownloadsApiTest extends \PHPUnit\Framework\TestCase
      */
     public function testLatestDocumentsExceptionOnWeirdResponseBody( string $body, DownloadsApiInterface $sut ) : void
     {
-        $response = new Response( 200, array(), $body );
+        $response = $this->response_factory->createResponse( 200 );
+        $response->getBody()->write( $body);
 
         $client_stub = $this->prophesize( ClientInterface::class );
         $client_stub->sendRequest( Argument::type(RequestInterface::class))

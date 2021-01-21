@@ -23,7 +23,6 @@ use Psr\Http\{
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Argument;
 use GuzzleHttp\Client as GuzzleClient;
-use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Exception\RequestException;
 
 class CacheDownloadsApiDecoratorTest extends \PHPUnit\Framework\TestCase
@@ -113,6 +112,8 @@ class CacheDownloadsApiDecoratorTest extends \PHPUnit\Framework\TestCase
             [ array("product" => "plissee", "category" => "montageanleitung") ],
         );
     }
+
+
 
 
 
@@ -224,11 +225,9 @@ class CacheDownloadsApiDecoratorTest extends \PHPUnit\Framework\TestCase
 
 
         $all = $sut->all($filter_params);
-        $this->assertIsIterable( $all);
         $this->assertEquals($api_result, $all);
 
         $latest = $sut->latest($filter_params);
-        $this->assertIsIterable( $latest);
         $this->assertEquals($api_result, $latest);
     }
 
@@ -267,11 +266,9 @@ class CacheDownloadsApiDecoratorTest extends \PHPUnit\Framework\TestCase
 
         $all = $sut->all( $filter_params );
         $this->assertEquals($api_result, $all);
-        $this->assertIsIterable( $all);
 
         $latest = $sut->latest( $filter_params );
         $this->assertEquals($api_result, $latest);
-        $this->assertIsIterable( $latest);
     }
 
 

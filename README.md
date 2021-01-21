@@ -6,7 +6,7 @@
 
 # DownloadsApi Client
 
-**Server-side PHP client for retrieving a list of available downloads from Germania's DownloadsApi.**
+**Server-side PHP client for retrieving a list of available downloads from Germania's Downloads API.**
 
 [![Packagist](https://img.shields.io/packagist/v/germania-kg/downloadsapi-client.svg?style=flat)](https://packagist.org/packages/germania-kg/downloadsapi-client)
 [![PHP version](https://img.shields.io/packagist/php-v/germania-kg/downloadsapi-client.svg)](https://packagist.org/packages/germania-kg/downloadsapi-client)
@@ -15,99 +15,121 @@
 [![Code Coverage](https://scrutinizer-ci.com/g/GermaniaKG/DownloadsApi-Client/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/GermaniaKG/DownloadsApi-Client/?branch=master)
 [![Build Status](https://scrutinizer-ci.com/g/GermaniaKG/DownloadsApi-Client/badges/build.png?b=master)](https://scrutinizer-ci.com/g/GermaniaKG/DownloadsApi-Client/build-status/master)
 
-
 ## Installation
+
+The v5 release is a complete rewrite, so there is no “upgrading” procedure.
 
 ```bash
 $ composer require germania-kg/downloadsapi-client
+$ composer require germania-kg/downloadsapi-client:^5.0
+```
+
+This package requires a *PSR-18 HTTP client* implementation and a *PSR-17 HTT factory* implementation. Suggestions are [Guzzle 7](https://packagist.org/packages/guzzlehttp/guzzle) via [guzzlehttp/guzzle](https://packagist.org/packages/guzzlehttp/) and Nyholm's [nyholm/psr7](nyholm/psr7):
+
+```bash
+$ composer require nyholm/psr7
+$ composer require guzzlehttp/guzzle
 ```
 
 
 
-## Usage
+## Basics
 
-### Prerequisites
+### Interface and abstract class
 
-The **DownloadsApi** requires a PSR-18 *HTTP Client* as well as a *PSR-7 Request* template. While you of course may use your favourite implementations, the Factory class will create both the PSR-18's `Psr\Http\Client\ClientInterface` and PSR-7 `Psr\Http\Message\RequestInterface` instances on the shoulders of Guzzle.
-
-The PSR-7 Request carries the API endpoint and the Authorization header, and the actal API requests will be cloned from this one.
+Interface **DownloadsApiInterface** provides public methods for retrieving documents, ***all*** and ***latest*** and ***request***, with the latter for internal use. All of these return an **iterable**. There are also interceptors for the authentication key:
 
 ```php
-<?php
-use Germania\DownloadsApi\Factory;
+// Provided by interface 
+// Germania\DownloadsApi\DownloadsApiInterface
 
-$api   = "https://api.example.com/"
-$token = "manymanyletters"; 
+public function all() : iterable;
+public function latest() : iterable;
+public function request( string $path ) : iterable ;
 
-$factory     = new Factory;
-$http_client = $factory->createClient();
-$request     = $factory->createRequest( $api, $token);
+public function setAuthentication( ?string $key ) : DownloadsApiInterface;
+public function getAuthentication( ) : string;
 ```
 
-Furthermore, using a `Psr\Cache\CacheItemPoolInterface` and a `Psr\Log\LoggerInterface` is always useful:
+Abstract class **DownloadsApiAbstract** prepares the *all* and *latest* methods to delegate directly to the *request* method. It also utilizes various useful traits such as `Psr\Log\LoggerAwareTrait`, `LoglevelTrait` and `AuthenticationTrait`. – So any class extending this abstract will thus provide:
 
 ```php
-$cache  = new \Stash\Pool( ... );
-$logger = new \Monolog\Logger( ... );
+// Inherited from abstract class 
+// Germania\DownloadsApi\DownloadsApiAbstract
+  
+$api->setLogger( \Monolog\Logger( ... ) ); 
+
+$api->setErrorLoglevel( \LogLevel::ERROR );
+$api->setSuccessLoglevel( \LogLevel::INFO );
+
+$api->setAuthentication( "secrete" );
+$api->getAuthentication(); // "secret"
 ```
 
 
 
-### The DownloadsApi
+### Cache Support
 
-The **DownloadsApi** requires a PSR-18 *HTTP Client* as well as a *PSR-7 Request* template and a *PSR-6 Cache ItemPool*. 
+Class **CacheDownloadsApiDecorator** wraps an existing *DownloadsApi* instance and adds caching. It extends *DownloadsApiDecorator* which itself extends *DownloadsApiAbstract*, so the class also implements *DownloadsApiInterface*.
+
+The constructor requires a ***DownloadsApi*** (or *DownloadsApiInterface)* instance and a ***PSR-6 Cache Item Pool***. You may optionally pass a ***cache lifetime*** in seconds which defaults to 14400 (4 hours).
 
 ```php
 <?php
 use Germania\DownloadsApi\DownloadsApi;
+use Germania\DownloadsApi\CacheDownloadsApiDecorator;
+use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 
-$client = new DownloadsApi($client, $request);
+$api = new DownloadsApi( ... );
+$psr6 = new FilesystemAdapter( ... );
+
+$cached_api = new CacheDownloadsApiDecorator( $api, $psr6);
+$cached_api = new CacheDownloadsApiDecorator( $api, $psr6, 14400);
 ```
 
 
 
-### Security considerations: The caching engine
+### API client
 
-The results are stored in the PSR-6 cache passed to the *DownloadsApi* constructor, using a *cache key* to look up the results next time. 
-
-This *cache key* contains amongst others a fast-to-compute **sha256 hash** of the authorization header. The downside is, your auth tokens are vulnerable to *hash collision* attacks, when two different string produce the same hash. 
-
-Your auth token hopefully has a baked-in lifetime. Once this lifetime is reached, the auth token is worthless anyway. And, when an attacker has file access to your cache, he will have all results, regardless if he has your auth tokens or not. 
-
-**Security tips:**
-
-- Consider to pass an “Always-empty-cache” or one with very short lifetime, such as [Stash's Ephemeral](http://www.stashphp.com/Drivers.html#ephemeral) driver.
-- Store your cache securely. This is not responsibility of this library.
-- Clean your downloads cache often. This is not responsibility of this library.
-
-
-
-### Retrieve documents
-
-The **DownloadsApi** provides two public methods, ***all*** and ***latest***, which return an ***ArrayIterator*** with the documents provided by *Germania's DownloadsAPI*. 
-
-The resulting documents list will have been pre-filtered according to the permissions related with the Access token sent along with the *Guzzle Client* request.
-
-**Caching:** The results are cached in the given *PSR-6 Cache Item Pool*. The cache item TTL depends on the `Cache-Control: max-age=SECONDS` header that came along the response to the *Guzzle Client* request. The default TTL is 3600 seconds. 
+The **DownloadsApi** extends *DownloadsApiAbstract* und thus implements *DownloadsApiInterface*. The constructor requires a *PSR-18 HTTP Client*, a *PSR-17 Request factory* and an *token string* that works as API key.
 
 ```php
-$downloads = $client->latest();
-$downloads = $client->all();
+<?php
+use Germania\DownloadsApi\DownloadsApi;
+use GuzzleHttp\Client;
+use Nyholm\Psr7\Factory\Psr17Factory;
+
+$psr18 = new Client;
+$psr17 = new Psr17Factory;
+$key = "secret"
+  
+$api = new DownloadsApi($psr18, $psr17, $key);
+```
+
+
+
+## Retrieve documents
+
+Public methods ***all*** and ***latest*** return an ***Array* iterable** with the documents provided by Germania's Documents API. 
+
+```php
+$downloads = $api->latest();
+$downloads = $api->all();
 
 foreach( $downloads as $document):
 	print_r( $document );
 endforeach;
 ```
 
-#### Example record
+### Example record
 
-The `print_r( $document )` will reveal something like this:
+The above `print_r( $document )` will reveal something like this:
 
 ```text
 Array (
     [company] =>
-    [brand] => luxaflex
-    [title] => Luxaflex<sup>®</sup> Dachfenster-Produkte
+    [brand] => mybrand
+    [title] => Brand<sup>®</sup> Window Styling
     [subtitle] =>
     [subtitle2] =>
     [description] =>
@@ -143,8 +165,6 @@ Array (
 )
 ```
 
-
-
 ### Filtering results
 
 To narrow down the results, both the *all* and *latest* methods accept an **array with filter values.** The fiter values may contain multiple values, separated with comma. 
@@ -154,24 +174,22 @@ Think of the filter array items as `WHERE … AND…` clauses, and comma-separat
 ```php
 $filters = array(
   'company' => "ACME",
-  'brand'   => "luxaflex",
+  'brand'   => "mybrand",
   'category' => "brochure",
   'language' => "en",
   'keyword' => "customers,retailers",
   'product' => "cars,bikes"
 );
 
-$downloads = $client->latest($filters);
-$downloads = $client->all($filters);
+$downloads = $api->latest($filters);
+$downloads = $api->all($filters);
 ```
-
-
 
 
 
 ## Errors and Exceptions
 
-It should be plenty to watch out for `\Germania\DownloadsApi\Exceptions\DownloadsApiExceptionInterface` since all concrete exceptions classes implement this interface.
+It should be plenty to watch out for `\Germania\DownloadsApi\Exceptions\DownloadsApiExceptionInterface` since all concrete exception classes implement this interface.
 
 ```php
 <?php
@@ -184,11 +202,9 @@ try {
   $client->latest();
 }
 catch (\Germania\DownloadsApi\DownloadsApiExceptionInterface $e) {
-  
+	echo $e->getMessage();
 }
 ```
-
-
 
 **Exceptions during request:**
 Whenever a PSR-18 client request fails, a **DownloadsApiRuntimeException** will be thrown. This class implements `DownloadsApiExceptionInterface` and extends `\RuntimeException`.
@@ -211,7 +227,7 @@ See [full issues list.][i0]
 
 ## Unit tests
 
-Copy `phpunit.xml.dist` to `phpunit.xml` and fill in the **AUTH_TOKEN** you ontained from Germania. 
+Copy `phpunit.xml.dist` to `phpunit.xml` and fill in the **AUTH_TOKEN** you obtained from Germania. 
 
 Run [PhpUnit](https://phpunit.de/) like this:
 
