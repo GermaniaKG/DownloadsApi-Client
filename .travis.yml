@@ -18,6 +18,5 @@ before_script:
 
 script:
   - composer phpunit
-  - php coverage-checker.php tests/build/clover.xml 75
 
 after_script:
