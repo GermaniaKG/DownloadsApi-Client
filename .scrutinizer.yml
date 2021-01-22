@@ -9,10 +9,10 @@ build:
     tests:
         override:
             -
-                command: 'XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-clover=coverage'
+                command: 'vendor/bin/phpunit --coverage-clover'
                 # command: 'vendor/bin/phpunit --coverage-text'
                 coverage:
-                    file: 'coverage'
+                    file: 'tests/build/clover.xml'
                     format: 'php-clover'
 
     nodes:
@@ -38,4 +38,3 @@ checks:
 filter:
     excluded_paths:
         - tests/*
-
