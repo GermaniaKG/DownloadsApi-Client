@@ -26,7 +26,7 @@ trait AuthenticationTrait
     /**
      * @param string $key API key
      */
-    public function setAuthentication(?string $key) : self
+    public function setAuthentication(?string $key) : DownloadsApiInterface
     {
         $this->auth_token = (string) $key;
         return $this;
