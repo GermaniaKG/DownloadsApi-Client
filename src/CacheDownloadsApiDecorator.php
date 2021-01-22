@@ -2,7 +2,6 @@
 namespace Germania\DownloadsApi;
 
 use Psr\Cache\CacheItemPoolInterface;
-use Psr\Log\LoggerInterface;
 
 class CacheDownloadsApiDecorator extends DownloadsApiDecorator
 {
