@@ -81,7 +81,7 @@ class DownloadsApiDecorator extends DownloadsApiAbstract
     /**
      * @inheritDoc
      */
-    public function setAuthentication($auth_token) : self
+    public function setAuthentication($auth_token) : DownloadsApiInterface
     {
         $this->client->setAuthentication($auth_token);
         return $this;
