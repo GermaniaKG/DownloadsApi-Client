@@ -20,4 +20,3 @@ script:
   - composer phpunit
 
 after_script:
-
