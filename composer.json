@@ -26,7 +26,7 @@
         "php": "^7.3|^8.0",
         "germania-kg/response-decoder": "^1.0",
         "psr/log": "^1.1",
-        "psr/cache": "^1.0",
+        "psr/cache": "^1.0|^2.0|^3.0",
         "psr/http-factory": "^1.0",
         "psr/http-client": "^1.0"
     },
