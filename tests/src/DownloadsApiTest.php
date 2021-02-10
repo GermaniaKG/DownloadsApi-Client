@@ -145,7 +145,7 @@ class DownloadsApiTest extends \PHPUnit\Framework\TestCase
     public function provideFilterParameters() : array
     {
         return array(
-            [ array("product" => "plissee", "category" => "montageanleitung") ],
+            "Product and category" => [ array("product" => "plissee", "category" => "montageanleitung") ],
         );
     }
 
@@ -197,9 +197,9 @@ class DownloadsApiTest extends \PHPUnit\Framework\TestCase
     public function provideInvalidAuthentication()
     {
         return array(
-            [ "invalid" ],
-            [ "" ],
-            [ null ]
+            "Invalid token string" => [ "invalid" ],
+            "Empty token string" => [ "" ],
+            "NULL" => [ null ]
         );
     }
 
@@ -310,12 +310,12 @@ class DownloadsApiTest extends \PHPUnit\Framework\TestCase
 	public function provideVariousInvalidResonseBodies() : array
 	{
 		return array(
-			[ "hello!" ],
-			[ json_encode( array("foo" => "bar")) ],
-			[ json_encode( array("data" => "bar")) ],
-			[ json_encode( array("data" => 1)) ],
-			[ json_encode( array("data" => false)) ],
-			[ json_encode( array("data" => true)) ],
+            "No Json"                => [ "hello!" ],
+            "Data attr missing"      => [ json_encode( array("foo"  => "bar")) ],
+            "Meta and links missing" => [ json_encode( array("data" => "bar")) ],
+            "Invalid data (int)"     => [ json_encode( array("data" => 1)) ],
+            "Invalid data (FALSE)"   => [ json_encode( array("data" => false)) ],
+            "Invalid data (TRUE)"    => [ json_encode( array("data" => true)) ],
 		);
 	}
 
