@@ -60,6 +60,12 @@ class DownloadsApiTest extends \PHPUnit\Framework\TestCase
 
 
     /**
+     * @var array
+     */
+    public static $guzzle_options = array();
+
+
+    /**
      * Store the Auth Token between tests
      * in order to avoid asking Auth API with each setUp() run.
      * @var string
@@ -69,7 +75,13 @@ class DownloadsApiTest extends \PHPUnit\Framework\TestCase
 
     public function setUp() : void
     {
-        $this->client = new GuzzleClient;
+        $found_certs = glob(realpath(dirname(__DIR__)) . "/*.pem");
+        $ca_cert = $found_certs[0] ?? null;
+        if ($ca_cert) {
+            static::$guzzle_options = array_merge(static::$guzzle_options, ['verify' => $ca_cert]);
+        }
+
+        $this->client = $this->createGuzzle();
         $this->request_factory = new Psr17Factory;
         $this->response_factory = new Psr17Factory;
 
@@ -77,6 +89,12 @@ class DownloadsApiTest extends \PHPUnit\Framework\TestCase
             static::$authentication_cache = $this->getAuthenticationToken();
         }
         $this->authentication = static::$authentication_cache;
+    }
+
+
+    protected function createGuzzle() : GuzzleClient
+    {
+        return new GuzzleClient(static::$guzzle_options);
     }
 
 
@@ -330,10 +348,11 @@ class DownloadsApiTest extends \PHPUnit\Framework\TestCase
         if (empty($GLOBALS['AUTH_API'])
         or empty($GLOBALS['AUTH_USER'])
         or empty($GLOBALS['AUTH_PASS'])) {
-            throw new \RuntimeException("Authentication data missing in phpunit.xml");
+            $this->markTestSkipped('Authentication data missing in phpunit.xml' );
+            return "";
         }
 
-        $guzzle = new GuzzleClient([ 'base_uri' => $GLOBALS['AUTH_API'] ]);
+        $guzzle = new GuzzleClient(array_merge(static::$guzzle_options, [ 'base_uri' => $GLOBALS['AUTH_API'] ]));
 
         echo "\n\nAsk Authentication API\n\n";
 
