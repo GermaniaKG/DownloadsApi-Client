@@ -19,7 +19,7 @@ abstract class DownloadsApiAbstract implements DownloadsApiInterface
     /**
      * @return iterable
      *
-     * @throws \Germania\DownloadsApi\DownloadsApiExceptionInterface.
+     * @throws \Germania\DownloadsApi\Exceptions\DownloadsApiExceptionInterface
      */
     abstract public function request(string $path, array $filters = array()) : iterable;
 

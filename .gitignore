@@ -48,7 +48,8 @@ node_modules
 var/*
 logs/*
 phpunit.xml
+*.pem
 
 
 
-
+phpstan.neon

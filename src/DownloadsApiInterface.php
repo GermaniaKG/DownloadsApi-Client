@@ -17,9 +17,9 @@ interface DownloadsApiInterface
     /**
      * @return iterable
      *
-     * @throws \Germania\DownloadsApi\DownloadsApiExceptionInterface.
+     * @throws \Germania\DownloadsApi\Exceptions\DownloadsApiExceptionInterface
      */
-    public function request(string $path) : iterable ;
+    public function request(string $path, array $filters = array()) : iterable ;
 
 
     /**
@@ -27,9 +27,9 @@ interface DownloadsApiInterface
      *
      * @return iterable
      *
-     * @throws \Germania\DownloadsApi\DownloadsApiExceptionInterface.
+     * @throws \Germania\DownloadsApi\Exceptions\DownloadsApiExceptionInterface
      */
-    public function all() : iterable ;
+    public function all(array $filters = array()) : iterable ;
 
 
     /**
@@ -37,9 +37,9 @@ interface DownloadsApiInterface
      *
      * @return iterable
      *
-     * @throws \Germania\DownloadsApi\DownloadsApiExceptionInterface.
+     * @throws \Germania\DownloadsApi\Exceptions\DownloadsApiExceptionInterface
      */
-    public function latest() : iterable;
+    public function latest(array $filters = array()) : iterable;
 
 
 

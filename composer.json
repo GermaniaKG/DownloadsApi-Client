@@ -23,7 +23,7 @@
     },
 
     "require": {
-        "php": "^7.3|^8.0",
+        "php": "^7.4|^8.0",
         "germania-kg/response-decoder": "^1.0",
         "psr/log": "^1.1",
         "psr/cache": "^1.0|^2.0|^3.0",
@@ -40,8 +40,9 @@
         "php-coveralls/php-coveralls": "^2.0",
         "friendsofphp/php-cs-fixer": "^2.0",
         "spatie/phpunit-watcher": "^1.0",
-        "phpstan/phpstan": "^0.12.67",
-        "laminas/laminas-log": "^2.13"
+        "phpstan/phpstan": "^1.9",
+        "laminas/laminas-log": "^2.13",
+        "phpspec/prophecy": "^1.16"
     },
 
     "scripts": {
