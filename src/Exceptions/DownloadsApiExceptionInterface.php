@@ -1,6 +1,6 @@
 <?php
 namespace Germania\DownloadsApi\Exceptions;
 
-interface DownloadsApiExceptionInterface
+interface DownloadsApiExceptionInterface extends \Throwable
 {
 }
